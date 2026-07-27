@@ -1,0 +1,38 @@
+# Magnifico Street Food — Supabase CLI config
+#
+# Used when linking this repo to a NEW Supabase project:
+#   npx supabase login
+#   npx supabase link --project-ref YOUR_PROJECT_REF
+#   npx supabase db push
+#
+# Do NOT link to the old BurgerHub project.
+
+project_id = "YOUR_PROJECT_REF"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.migrations]
+enabled = true
+schema_paths = ["./migrations"]
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+
+[storage]
+enabled = true

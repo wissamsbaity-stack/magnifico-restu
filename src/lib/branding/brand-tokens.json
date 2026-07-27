@@ -1,0 +1,28 @@
+{
+  "official": {
+    "yellow": { "hex": "#F7B232", "rgb": [247, 178, 50] },
+    "pink": { "hex": "#EF4C64", "rgb": [239, 76, 100] },
+    "dark": { "hex": "#2D2D2D", "rgb": [45, 45, 45] },
+    "green": { "hex": "#82BF41", "rgb": [130, 191, 65] }
+  },
+  "logo": {
+    "path": "/logo.png",
+    "width": 738,
+    "height": 229,
+    "sourcePdf": "C:\\Users\\Wissam Sbaity\\Downloads\\magnifico.pdf"
+  },
+  "hex": {
+    "yellow": "#F7B232",
+    "pink": "#EF4C64",
+    "dark": "#2D2D2D",
+    "green": "#82BF41",
+    "cream": "#FFFAF0"
+  },
+  "colors": {
+    "yellow": [247, 178, 50],
+    "pink": [239, 76, 100],
+    "dark": [45, 45, 45],
+    "green": [130, 191, 65],
+    "cream": [255, 250, 240]
+  }
+}

@@ -1,0 +1,468 @@
+{
+  "categories": [
+    {
+      "id": "cat-appetizers",
+      "name": "Appetizers",
+      "slug": "appetizers",
+      "description": "Golden starters and shareable bites to kick off your meal",
+      "icon": "cookie",
+      "sortOrder": 1
+    },
+    {
+      "id": "cat-beef-burgers",
+      "name": "Beef Burgers",
+      "slug": "beef-burgers",
+      "description": "Smash-grilled beef patties stacked with premium toppings",
+      "icon": "beef",
+      "sortOrder": 2
+    },
+    {
+      "id": "cat-chicken-burgers",
+      "name": "Chicken Burgers",
+      "slug": "chicken-burgers",
+      "description": "Crispy, grilled, and sauced chicken burgers made to order",
+      "icon": "flame",
+      "sortOrder": 3
+    },
+    {
+      "id": "cat-dips",
+      "name": "Dips",
+      "slug": "dips",
+      "description": "House-made sauces and dips for burgers, fries, and more",
+      "icon": "droplet",
+      "sortOrder": 4
+    },
+    {
+      "id": "cat-beverages",
+      "name": "Beverages",
+      "slug": "beverages",
+      "description": "Cold drinks, fresh lemonade, and refreshments",
+      "icon": "cup-soda",
+      "sortOrder": 5
+    }
+  ],
+  "menuItems": [
+    {
+      "id": "item-loaded-fries",
+      "categoryId": "cat-appetizers",
+      "name": "Loaded Fries",
+      "slug": "loaded-fries",
+      "description": "Crispy fries topped with melted cheese, beef crumble, jalapeños, and house sauce.",
+      "price": 3,
+      "imageUrl": "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=800&q=80",
+      "isPopular": true,
+      "isAvailable": true,
+      "tags": [
+        "appetizer",
+        "fries",
+        "cheese"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-onion-rings",
+      "categoryId": "cat-appetizers",
+      "name": "Crispy Onion Rings",
+      "slug": "crispy-onion-rings",
+      "description": "Beer-battered onion rings fried golden and served with garlic mayo.",
+      "price": 3,
+      "imageUrl": "https://images.unsplash.com/photo-1630384060425-c87ada4a36af?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "appetizer",
+        "crispy"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-mozzarella-sticks",
+      "categoryId": "cat-appetizers",
+      "name": "Mozzarella Sticks",
+      "slug": "mozzarella-sticks",
+      "description": "Stretchy mozzarella sticks with a crisp crust and marinara dip.",
+      "price": 3,
+      "imageUrl": "https://images.unsplash.com/photo-1618164435732-4134786d65c0?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "appetizer",
+        "cheese"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-chicken-bites",
+      "categoryId": "cat-appetizers",
+      "name": "Chicken Bites",
+      "slug": "chicken-bites",
+      "description": "Juicy chicken bites coated in seasoned crunch, served with spicy ranch.",
+      "price": 3,
+      "imageUrl": "https://images.unsplash.com/photo-1562967914-608f82629710?w=800&q=80",
+      "isPopular": true,
+      "isAvailable": true,
+      "tags": [
+        "appetizer",
+        "chicken"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-jalapeno-poppers",
+      "categoryId": "cat-appetizers",
+      "name": "Jalapeño Poppers",
+      "slug": "jalapeno-poppers",
+      "description": "Cream cheese–filled jalapeños wrapped in a crispy shell with chipotle dip.",
+      "price": 3,
+      "imageUrl": "https://images.unsplash.com/photo-1608039253907-b50fe6702034?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "appetizer",
+        "spicy"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-classic-smash",
+      "categoryId": "cat-beef-burgers",
+      "name": "Classic Smash Burger",
+      "slug": "classic-smash-burger",
+      "description": "Double smashed beef patty, American cheese, pickles, onions, and signature sauce on a brioche bun.",
+      "price": 6,
+      "imageUrl": "https://images.unsplash.com/photo-1568901346275-12b66362b3b3?w=800&q=80",
+      "isPopular": true,
+      "isAvailable": true,
+      "tags": [
+        "beef",
+        "burger",
+        "signature"
+      ],
+      "isBestSeller": true
+    },
+    {
+      "id": "item-double-cheese",
+      "categoryId": "cat-beef-burgers",
+      "name": "Double Cheese Burger",
+      "slug": "double-cheese-burger",
+      "description": "Two beef patties, double cheddar, caramelized onions, and house ketchup.",
+      "price": 7,
+      "imageUrl": "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "beef",
+        "burger",
+        "cheese"
+      ],
+      "isBestSeller": true
+    },
+    {
+      "id": "item-bbq-angus",
+      "categoryId": "cat-beef-burgers",
+      "name": "BBQ Angus Burger",
+      "slug": "bbq-angus-burger",
+      "description": "Premium Angus beef, smoky BBQ sauce, crispy bacon, cheddar, and grilled onions.",
+      "price": 8,
+      "imageUrl": "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&q=80",
+      "isPopular": true,
+      "isAvailable": true,
+      "tags": [
+        "beef",
+        "burger",
+        "angus",
+        "bbq"
+      ],
+      "isBestSeller": true
+    },
+    {
+      "id": "item-mushroom-swiss",
+      "categoryId": "cat-beef-burgers",
+      "name": "Mushroom Swiss Burger",
+      "slug": "mushroom-swiss-burger",
+      "description": "Sautéed mushrooms, melted Swiss cheese, garlic aioli, and fresh arugula.",
+      "price": 8,
+      "imageUrl": "https://images.unsplash.com/photo-1594212699903-ec8a4270294d?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "beef",
+        "burger",
+        "mushroom"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-truffle-burger",
+      "categoryId": "cat-beef-burgers",
+      "name": "Truffle Burger",
+      "slug": "truffle-burger",
+      "description": "Angus patty, truffle mayo, aged cheddar, and crispy shallots on a toasted bun.",
+      "price": 10,
+      "imageUrl": "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "beef",
+        "burger",
+        "premium",
+        "truffle"
+      ],
+      "isBestSeller": true
+    },
+    {
+      "id": "item-crispy-chicken",
+      "categoryId": "cat-chicken-burgers",
+      "name": "Crispy Chicken Burger",
+      "slug": "crispy-chicken-burger",
+      "description": "Hand-battered crispy chicken, lettuce, tomato, and creamy mayo on a soft bun.",
+      "price": 6,
+      "imageUrl": "https://images.unsplash.com/photo-1606755962773-995b87987191?w=800&q=80",
+      "isPopular": true,
+      "isAvailable": true,
+      "tags": [
+        "chicken",
+        "burger",
+        "crispy"
+      ],
+      "isBestSeller": true
+    },
+    {
+      "id": "item-spicy-chicken",
+      "categoryId": "cat-chicken-burgers",
+      "name": "Spicy Chicken Burger",
+      "slug": "spicy-chicken-burger",
+      "description": "Spiced crispy chicken, pepper jack, pickled jalapeños, and chipotle mayo.",
+      "price": 6,
+      "imageUrl": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "chicken",
+        "burger",
+        "spicy"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-bbq-chicken",
+      "categoryId": "cat-chicken-burgers",
+      "name": "BBQ Chicken Burger",
+      "slug": "bbq-chicken-burger",
+      "description": "Grilled chicken thigh, tangy BBQ glaze, coleslaw, and cheddar on a brioche bun.",
+      "price": 6,
+      "imageUrl": "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "chicken",
+        "burger",
+        "bbq"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-nashville-hot",
+      "categoryId": "cat-chicken-burgers",
+      "name": "Nashville Hot Chicken",
+      "slug": "nashville-hot-chicken",
+      "description": "Nashville-style hot fried chicken, pickles, and cooling ranch on a buttered bun.",
+      "price": 7,
+      "imageUrl": "https://images.unsplash.com/photo-1625938145744-e3805157468c?w=800&q=80",
+      "isPopular": true,
+      "isAvailable": true,
+      "tags": [
+        "chicken",
+        "burger",
+        "spicy",
+        "nashville"
+      ],
+      "isBestSeller": true
+    },
+    {
+      "id": "item-honey-mustard-chicken",
+      "categoryId": "cat-chicken-burgers",
+      "name": "Honey Mustard Chicken",
+      "slug": "honey-mustard-chicken",
+      "description": "Crispy chicken, honey mustard glaze, Swiss cheese, and fresh greens.",
+      "price": 6,
+      "imageUrl": "https://images.unsplash.com/photo-1603894584375-5e8b3e0fb838?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "chicken",
+        "burger",
+        "sweet"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-garlic-mayo",
+      "categoryId": "cat-dips",
+      "name": "Garlic Mayo",
+      "slug": "garlic-mayo",
+      "description": "Creamy house garlic mayo with roasted garlic and a hint of lemon.",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1472476446867-f7fb04afdfe7?w=800&q=80",
+      "isPopular": true,
+      "isAvailable": true,
+      "tags": [
+        "dip",
+        "sauce"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-truffle-mayo",
+      "categoryId": "cat-dips",
+      "name": "Truffle Mayo",
+      "slug": "truffle-mayo",
+      "description": "Rich truffle-infused mayo — perfect for burgers and fries.",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1601905174316-803c97566fed?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "dip",
+        "sauce",
+        "truffle"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-bbq-sauce",
+      "categoryId": "cat-dips",
+      "name": "BBQ Sauce",
+      "slug": "bbq-sauce",
+      "description": "Smoky, slightly sweet BBQ sauce with a balanced tang.",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1625943552535-ac0e5b1d67d1?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "dip",
+        "sauce",
+        "bbq"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-spicy-ranch",
+      "categoryId": "cat-dips",
+      "name": "Spicy Ranch",
+      "slug": "spicy-ranch",
+      "description": "Cool ranch with a kick of cayenne and fresh herbs.",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1514516344777-b878a2c75495?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "dip",
+        "sauce",
+        "spicy"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-honey-mustard-dip",
+      "categoryId": "cat-dips",
+      "name": "Honey Mustard",
+      "slug": "honey-mustard-dip",
+      "description": "Sweet honey mustard blend — great with chicken and fries.",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1476126663398-043c11433ead?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "dip",
+        "sauce",
+        "sweet"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-coca-cola",
+      "categoryId": "cat-beverages",
+      "name": "Coca Cola",
+      "slug": "coca-cola",
+      "description": "Classic Coca-Cola served ice-cold (330ml).",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1629203841295-930d31091039?w=800&q=80",
+      "isPopular": true,
+      "isAvailable": true,
+      "tags": [
+        "beverage",
+        "soda"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-sprite",
+      "categoryId": "cat-beverages",
+      "name": "Sprite",
+      "slug": "sprite",
+      "description": "Refreshing lemon-lime Sprite served chilled (330ml).",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1625772299848-391dd4e59f70?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "beverage",
+        "soda"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-fresh-lemonade",
+      "categoryId": "cat-beverages",
+      "name": "Fresh Lemonade",
+      "slug": "fresh-lemonade",
+      "description": "Freshly squeezed lemonade with a touch of mint.",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1523672062202-67c1ec7c8319?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "beverage",
+        "fresh"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-iced-tea",
+      "categoryId": "cat-beverages",
+      "name": "Iced Tea",
+      "slug": "iced-tea",
+      "description": "Brewed black tea over ice with lemon — lightly sweetened.",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "beverage",
+        "tea"
+      ],
+      "isBestSeller": false
+    },
+    {
+      "id": "item-water",
+      "categoryId": "cat-beverages",
+      "name": "Water",
+      "slug": "water",
+      "description": "Still mineral water (500ml).",
+      "price": 1,
+      "imageUrl": "https://images.unsplash.com/photo-1548839140-5a941f85cecc?w=800&q=80",
+      "isPopular": false,
+      "isAvailable": true,
+      "tags": [
+        "beverage",
+        "water"
+      ],
+      "isBestSeller": false
+    }
+  ],
+  "stats": {
+    "totalItems": 25,
+    "categoryCount": 5
+  }
+}

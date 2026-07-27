@@ -1,0 +1,146 @@
+/* Orders Dashboard — native iOS feel on Safari */
+
+html.orders-app {
+  height: 100%;
+  overflow: hidden;
+  scroll-behavior: auto;
+}
+
+html.orders-app body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.orders-app-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: var(--orders-vv-height, 100dvh);
+  max-height: var(--orders-vv-height, 100dvh);
+  overflow: hidden;
+  overscroll-behavior: none;
+  transform: translateY(var(--orders-vv-offset, 0px));
+  -webkit-transform: translateY(var(--orders-vv-offset, 0px));
+}
+
+.orders-app-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.orders-app-shell *,
+.orders-app-shell *::before,
+.orders-app-shell *::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.orders-touch-btn,
+.orders-touch-link {
+  touch-action: manipulation;
+  transform: none !important;
+  -webkit-transform: none !important;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.orders-touch-btn:active:not(:disabled),
+.orders-touch-link:active {
+  opacity: 0.72;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .orders-touch-btn:hover:not(:disabled),
+  .orders-touch-link:hover {
+    opacity: 0.92;
+  }
+}
+
+.orders-input {
+  font-size: 16px;
+  line-height: 1.4;
+  touch-action: manipulation;
+  transform: none !important;
+  -webkit-transform: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.orders-input:focus {
+  outline: none;
+}
+
+.orders-history-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 88px;
+}
+
+.orders-card-enter {
+  animation: orders-fade-in 0.22s ease-out both;
+}
+
+.orders-card-exit {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+
+@keyframes orders-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.orders-toast-enter {
+  animation: orders-toast-in 0.2s ease-out both;
+}
+
+.orders-toast-exit {
+  opacity: 0;
+  transition: opacity 0.16s ease;
+  pointer-events: none;
+}
+
+@keyframes orders-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.orders-live-dot {
+  box-shadow: 0 0 0 0 rgb(239 68 68 / 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orders-card-enter,
+  .orders-toast-enter {
+    animation: none;
+  }
+
+  .orders-card-exit,
+  .orders-toast-exit {
+    transition: none;
+  }
+}
