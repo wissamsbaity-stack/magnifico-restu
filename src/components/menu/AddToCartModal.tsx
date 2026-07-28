@@ -129,7 +129,7 @@ export function AddToCartModal({ item, onClose }: AddToCartModalProps) {
             exit={overlayFade.exit}
             transition={overlayFade.transition}
             onClick={onClose}
-            className="absolute inset-0 bg-brand-ink/75 backdrop-blur-sm"
+            className="absolute inset-0 bg-brand-ink/75"
           />
 
           <div

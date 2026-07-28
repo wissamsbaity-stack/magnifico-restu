@@ -99,7 +99,7 @@ export function ImageCropEditor({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-brand-ink/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-brand-ink/70 p-0 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -110,7 +110,10 @@ export function ImageCropEditor({
         className="absolute inset-0 -z-10 cursor-default"
         onClick={onClose}
       />
-      <div className="flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-surface-raised shadow-2xl sm:rounded-2xl">
+      <div
+        className="flex w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-surface-raised shadow-2xl sm:max-h-[min(92dvh,52rem)] sm:rounded-2xl"
+        style={{ maxHeight: "min(92dvh, 100%)" }}
+      >
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
           <div className="flex items-center gap-2">
             <Crop className="h-4 w-4 text-accent" />

@@ -43,3 +43,4 @@ yarn-error.log*
 .ngrok.log
 
 tmp-tailwind-out.css
+.env*

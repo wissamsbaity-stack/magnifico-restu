@@ -59,7 +59,13 @@ export default function AdminLoginPage({
   }
 
   return (
-    <div className="admin-panel theme-night flex min-h-screen items-center justify-center px-4 py-10">
+    <div
+      className="admin-panel theme-night flex min-h-[100dvh] items-center justify-center px-4 py-10"
+      style={{
+        paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(2.5rem, env(safe-area-inset-bottom, 0px))",
+      }}
+    >
       <div className="admin-card w-full max-w-md p-6 sm:p-8">
         <div className="mb-8">
           <AdminBrandMark

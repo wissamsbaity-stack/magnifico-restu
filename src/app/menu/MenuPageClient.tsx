@@ -2,13 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AnimatePresence, m } from "@/lib/motion";
 import { MenuToolbar } from "@/components/menu/MenuToolbar";
 import { MenuItemCard } from "@/components/menu/MenuItemCard";
 import { MenuCategorySectionHeader } from "@/components/menu/MenuCategorySectionHeader";
 import { AddToCartModal } from "@/components/menu/AddToCartModal";
 import { StaggerGrid } from "@/components/motion/StaggerGrid";
-import { categoryCrossFade } from "@/lib/motion-presets";
 import {
   groupMenuItemsByCategory,
   sortMenuItems,
@@ -123,8 +121,6 @@ export default function MenuPageClient({
   const activeCategoryName =
     activeCategory === "all" ? "All Items" : activeCategoryObj?.name;
 
-  const gridKey = `${activeCategory}-${searchQuery.trim().toLowerCase()}`;
-
   const hasActiveFilters =
     searchQuery.trim() !== "" || activeCategory !== "all";
 
@@ -157,93 +153,63 @@ export default function MenuPageClient({
               ref={titleRef}
               className="scroll-mt-[var(--menu-category-scroll-offset)] pb-3 pt-4 sm:pb-4 sm:pt-5"
             >
-              <AnimatePresence mode="wait">
-                <m.div
-                  key={activeCategoryName ?? "all"}
-                  initial={categoryCrossFade.initial}
-                  animate={categoryCrossFade.animate}
-                  exit={categoryCrossFade.exit}
-                  transition={categoryCrossFade.transition}
-                >
-                  <MenuCategorySectionHeader
-                    title={activeCategoryName ?? "All Items"}
-                  />
-                </m.div>
-              </AnimatePresence>
+              <MenuCategorySectionHeader
+                title={activeCategoryName ?? "All Items"}
+              />
             </div>
           ) : (
-            <div ref={titleRef} className="scroll-mt-[var(--menu-category-scroll-offset)]" aria-hidden />
+            <div
+              ref={titleRef}
+              className="scroll-mt-[var(--menu-category-scroll-offset)]"
+              aria-hidden
+            />
           )}
 
-          <AnimatePresence mode="wait">
-            {filteredItems.length === 0 ? (
-              <m.div
-                key="empty"
-                initial={categoryCrossFade.initial}
-                animate={categoryCrossFade.animate}
-                exit={categoryCrossFade.exit}
-                transition={categoryCrossFade.transition}
-                className="rounded-2xl border border-line/10 bg-surface-raised px-6 py-16 text-center shadow-card"
-              >
-                <p className="font-display text-lg font-semibold text-cream">
-                  {hasActiveFilters
-                    ? "No dishes match your search"
-                    : "Menu is being prepared"}
-                </p>
-                <p className="mt-2 text-sm text-muted">
-                  {hasActiveFilters
-                    ? "Try a different category or search term."
-                    : "Check back soon — our kitchen is updating the menu."}
-                </p>
-                {hasActiveFilters ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      handleCategoryChange("all");
-                    }}
-                    className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-brand-pink px-6 text-sm font-bold text-white shadow-lift transition-all hover:brightness-110 motion-safe:active:scale-[0.97]"
-                  >
-                    Clear filters
-                  </button>
-                ) : null}
-              </m.div>
-            ) : showGrouped ? (
-              <m.div
-                key={gridKey}
-                initial={categoryCrossFade.initial}
-                animate={categoryCrossFade.animate}
-                exit={categoryCrossFade.exit}
-                transition={categoryCrossFade.transition}
-                className="space-y-5 pt-4 sm:space-y-6 sm:pt-5"
-              >
-                {groupedSections.map(({ category, items }, sectionIndex) => (
-                  <div key={category.id} className="space-y-3 sm:space-y-3.5">
-                    <MenuCategorySectionHeader title={category.name} />
-                    <MenuItemGrid
-                      items={items}
-                      onCustomize={setModalItem}
-                      priorityCount={sectionIndex === 0 ? 4 : 0}
-                    />
-                  </div>
-                ))}
-              </m.div>
-            ) : (
-              <m.div
-                key={gridKey}
-                initial={categoryCrossFade.initial}
-                animate={categoryCrossFade.animate}
-                exit={categoryCrossFade.exit}
-                transition={categoryCrossFade.transition}
-              >
-                <MenuItemGrid
-                  items={filteredItems}
-                  onCustomize={setModalItem}
-                  priorityCount={4}
-                />
-              </m.div>
-            )}
-          </AnimatePresence>
+          {filteredItems.length === 0 ? (
+            <div className="rounded-2xl border border-line/10 bg-surface-raised px-6 py-16 text-center shadow-card">
+              <p className="font-display text-lg font-semibold text-cream">
+                {hasActiveFilters
+                  ? "No dishes match your search"
+                  : "Menu is being prepared"}
+              </p>
+              <p className="mt-2 text-sm text-muted">
+                {hasActiveFilters
+                  ? "Try a different category or search term."
+                  : "Check back soon — our kitchen is updating the menu."}
+              </p>
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    handleCategoryChange("all");
+                  }}
+                  className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-brand-pink px-6 text-sm font-bold text-white shadow-lift transition-all hover:brightness-110 motion-safe:active:scale-[0.97]"
+                >
+                  Clear filters
+                </button>
+              ) : null}
+            </div>
+          ) : showGrouped ? (
+            <div className="space-y-5 pt-4 sm:space-y-6 sm:pt-5">
+              {groupedSections.map(({ category, items }, sectionIndex) => (
+                <div key={category.id} className="space-y-3 sm:space-y-3.5">
+                  <MenuCategorySectionHeader title={category.name} />
+                  <MenuItemGrid
+                    items={items}
+                    onCustomize={setModalItem}
+                    priorityCount={sectionIndex === 0 ? 4 : 0}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <MenuItemGrid
+              items={filteredItems}
+              onCustomize={setModalItem}
+              priorityCount={4}
+            />
+          )}
         </section>
       </div>
 

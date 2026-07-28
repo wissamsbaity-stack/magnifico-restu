@@ -78,7 +78,7 @@ export default async function RootLayout({
     >
       <body className="min-h-svh font-sans brand-environment">
         <Script id="splash-preflight" strategy="beforeInteractive">
-          {`try{if(sessionStorage.getItem("${SPLASH_STORAGE_KEY}")){document.documentElement.classList.add("splash-seen");}if("scrollRestoration" in history){history.scrollRestoration="manual";}}catch(e){}`}
+          {`try{if(sessionStorage.getItem("${SPLASH_STORAGE_KEY}")){document.documentElement.classList.add("splash-seen");}if("scrollRestoration" in history){history.scrollRestoration="manual";}setTimeout(function(){var d=document.documentElement;if(d.getAttribute("data-splash-lock")==="1"){d.style.overflow="";d.removeAttribute("data-splash-lock");var b=document.body;b.style.overflow="";b.style.position="";b.style.top="";b.style.width="";b.style.paddingRight="";}},3200);}catch(e){}`}
         </Script>
         <MotionProvider>
           <SettingsProvider settings={settings}>

@@ -1,34 +1,10 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
+import { acquireScrollLock } from "@/lib/scroll-lock";
 
-/** Locks page scroll while a body-portal overlay is open (works with orders-app). */
+/** Locks page scroll while a body-portal overlay is open. */
 export function usePortalScrollLock(locked: boolean) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!locked) return;
-
-    const html = document.documentElement;
-    const body = document.body;
-    const scrollEl = document.querySelector(
-      ".orders-app-scroll"
-    ) as HTMLElement | null;
-
-    const prev = {
-      htmlOverflow: html.style.overflow,
-      bodyOverflow: body.style.overflow,
-      scrollOverflow: scrollEl?.style.overflow ?? "",
-    };
-
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    if (scrollEl) {
-      scrollEl.style.overflow = "hidden";
-    }
-
-    return () => {
-      html.style.overflow = prev.htmlOverflow;
-      body.style.overflow = prev.bodyOverflow;
-      if (scrollEl) {
-        scrollEl.style.overflow = prev.scrollOverflow;
-      }
-    };
+    return acquireScrollLock();
   }, [locked]);
 }

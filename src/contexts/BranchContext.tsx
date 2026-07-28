@@ -61,8 +61,12 @@ export function BranchProvider({
 
     setSelectedSlug(valid);
     setHydrated(true);
+  }, [branches]);
 
-    if (valid || branches.length === 0) return;
+  // Prompt for a branch only after splash completes — opening during splash
+  // used to capture overflow:hidden and leave the page permanently unscrollable.
+  useEffect(() => {
+    if (!hydrated || selectedSlug !== null || branches.length === 0) return;
 
     const promptBranchSelection = () => openBranchModal();
 
@@ -84,11 +88,6 @@ export function BranchProvider({
     return () => {
       window.removeEventListener(SPLASH_COMPLETE_EVENT, promptBranchSelection);
     };
-  }, [branches]);
-
-  useEffect(() => {
-    if (!hydrated || selectedSlug !== null || branches.length === 0) return;
-    openBranchModal();
   }, [hydrated, selectedSlug, branches.length]);
 
   const setBranch = useCallback(

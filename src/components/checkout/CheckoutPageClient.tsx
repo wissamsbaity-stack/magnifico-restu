@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import { Store, Truck } from "lucide-react";
-import { AnimatePresence, m } from "@/lib/motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 import { BranchSwitcher } from "@/components/branch/BranchSwitcher";
 import { useBranchData } from "@/contexts/BranchContext";
 import type { OrderType } from "@/types/order";
-import { cn } from "@/lib/utils";
 
 const COPY = {
   delivery: {
@@ -20,31 +18,6 @@ const COPY = {
     cardDescription: "Enter your contact information for pickup.",
   },
 } as const;
-
-const textFade = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-  transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] as const },
-};
-
-function FadingText({
-  text,
-  className,
-  as: Tag = "p",
-}: {
-  text: string;
-  className?: string;
-  as?: "p" | "h2";
-}) {
-  return (
-    <AnimatePresence mode="wait" initial={false}>
-      <m.div key={text} {...textFade}>
-        <Tag className={className}>{text}</Tag>
-      </m.div>
-    </AnimatePresence>
-  );
-}
 
 export function CheckoutPageClient() {
   const [orderType, setOrderType] = useState<OrderType>("delivery");
@@ -76,26 +49,15 @@ export function CheckoutPageClient() {
         <div className="rounded-2xl border border-line/10 bg-surface-raised p-6 shadow-card lg:p-8">
           <div className="mb-6 flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-yellow/25 ring-1 ring-brand-yellow/30">
-              <AnimatePresence mode="wait" initial={false}>
-                <m.div key={orderType} {...textFade}>
-                  {isDelivery ? (
-                    <Truck className="h-5 w-5 text-brand-pink" aria-hidden />
-                  ) : (
-                    <Store className="h-5 w-5 text-brand-pink" aria-hidden />
-                  )}
-                </m.div>
-              </AnimatePresence>
+              {isDelivery ? (
+                <Truck className="h-5 w-5 text-brand-pink" aria-hidden />
+              ) : (
+                <Store className="h-5 w-5 text-brand-pink" aria-hidden />
+              )}
             </div>
             <div className="min-w-0">
-              <FadingText
-                as="h2"
-                text={copy.cardTitle}
-                className="text-lg font-semibold text-cream"
-              />
-              <FadingText
-                text={copy.cardDescription}
-                className={cn("text-sm text-muted")}
-              />
+              <h2 className="text-lg font-semibold text-cream">{copy.cardTitle}</h2>
+              <p className="text-sm text-muted">{copy.cardDescription}</p>
             </div>
           </div>
           <CheckoutForm

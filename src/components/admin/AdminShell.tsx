@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { cn } from "@/lib/utils";
 
 export function AdminShell({
@@ -17,34 +19,70 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useBodyScrollLock(mobileOpen);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const closeMobile = () => setMobileOpen(false);
 
   return (
-    <div className="admin-panel theme-night flex h-dvh max-h-dvh overflow-hidden text-cream">
-      {mobileOpen ? (
-        <button
-          type="button"
-          aria-label="Close menu"
-          className="fixed inset-0 z-40 bg-brand-dark/70 backdrop-blur-sm lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      ) : null}
-
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(85vw,18rem)] shrink-0 transform transition-transform duration-200 lg:static lg:z-0 lg:h-full lg:w-64 lg:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
+    <div className="admin-panel theme-night fixed inset-0 flex overflow-hidden text-cream">
+      {/* Desktop sidebar */}
+      <div className="relative hidden h-full w-64 shrink-0 lg:flex">
         <AdminSidebar
           email={email}
           restaurantName={restaurantName}
           logoUrl={logoUrl}
-          onNavigate={() => setMobileOpen(false)}
         />
-      </aside>
+      </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-white/8 bg-[rgb(var(--color-surface)/0.92)] px-4 backdrop-blur-xl lg:hidden">
+      {/* Mobile drawer — only mount when open (avoids full-screen overlay blocking content) */}
+      {mounted && mobileOpen
+        ? createPortal(
+            <div className="admin-panel theme-night fixed inset-0 z-50 text-cream lg:hidden">
+              <button
+                type="button"
+                aria-label="Close menu"
+                className="absolute inset-0 bg-brand-dark/70"
+                onClick={closeMobile}
+              />
+
+              <div
+                className="absolute inset-y-0 left-0 flex w-[min(85vw,18rem)] max-w-full flex-col bg-[rgb(var(--color-surface))] shadow-2xl"
+                style={{
+                  paddingTop: "env(safe-area-inset-top, 0px)",
+                  paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                }}
+              >
+                <div
+                  data-scroll-lock-scrollable
+                  className="flex h-full min-h-0 w-full flex-col overflow-hidden"
+                >
+                  <AdminSidebar
+                    email={email}
+                    restaurantName={restaurantName}
+                    logoUrl={logoUrl}
+                    onNavigate={closeMobile}
+                  />
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
+
+      <div className="relative z-0 flex min-h-0 min-w-0 flex-1 flex-col">
+        <header
+          className="z-30 flex shrink-0 items-center gap-3 border-b border-white/8 bg-[rgb(var(--color-surface))] px-4 lg:hidden"
+          style={{
+            paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))",
+            paddingBottom: "0.75rem",
+          }}
+        >
           <button
             type="button"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -66,8 +104,14 @@ export function AdminShell({
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10 lg:py-9">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div
+            className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-10 lg:py-9"
+            style={{
+              paddingBottom:
+                "max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))",
+            }}
+          >
             {children}
           </div>
         </div>

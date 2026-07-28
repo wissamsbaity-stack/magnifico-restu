@@ -12,7 +12,6 @@ import {
   type RefObject,
 } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { AnimatePresence, m } from "@/lib/motion";
 import { cropToImageStyle } from "@/lib/image-crop";
 import { cn } from "@/lib/utils";
 import type { MenuBanner } from "@/types/banner";
@@ -34,10 +33,12 @@ function isExternalHref(href: string): boolean {
 function BannerSlide({
   banner,
   priority,
+  active,
   swipeLockRef,
 }: {
   banner: MenuBanner;
   priority: boolean;
+  active: boolean;
   swipeLockRef: RefObject<boolean>;
 }) {
   const clickLink = banner.clickLink?.trim() || null;
@@ -57,6 +58,8 @@ function BannerSlide({
           alt={caption ?? "Promotional banner"}
           fill
           priority={priority}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "low"}
           className="object-cover"
           style={cropToImageStyle(banner.imageCrop)}
           sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 720px"
@@ -70,9 +73,16 @@ function BannerSlide({
     </>
   );
 
+  const shellClass = cn(
+    "absolute inset-0 transition-opacity duration-300 ease-out",
+    active ? "z-[1] opacity-100" : "z-0 opacity-0 pointer-events-none"
+  );
+
   if (clickLink) {
-    const interactiveClass =
-      "absolute inset-0 block cursor-pointer overflow-hidden motion-safe:transition-opacity motion-safe:duration-150 motion-safe:active:opacity-[0.94]";
+    const interactiveClass = cn(
+      shellClass,
+      "block cursor-pointer overflow-hidden motion-safe:active:opacity-[0.94]"
+    );
 
     if (isExternalHref(clickLink)) {
       return (
@@ -82,6 +92,8 @@ function BannerSlide({
           rel="noopener noreferrer"
           className={interactiveClass}
           onClick={handleClick}
+          aria-hidden={!active}
+          tabIndex={active ? 0 : -1}
           aria-label={caption ?? "Open banner link"}
         >
           {inner}
@@ -94,6 +106,8 @@ function BannerSlide({
         href={clickLink}
         className={interactiveClass}
         onClick={handleClick}
+        aria-hidden={!active}
+        tabIndex={active ? 0 : -1}
         aria-label={caption ?? "Open banner link"}
       >
         {inner}
@@ -101,7 +115,11 @@ function BannerSlide({
     );
   }
 
-  return <div className="absolute inset-0">{inner}</div>;
+  return (
+    <div className={shellClass} aria-hidden={!active}>
+      {inner}
+    </div>
+  );
 }
 
 export function HomeHeroCarousel({
@@ -118,7 +136,21 @@ export function HomeHeroCarousel({
   const dragging = useRef(false);
 
   const count = banners.length;
-  const active = banners[index];
+  const firstBanner = banners[0];
+
+  // Preload the first hero image as early as possible (critical LCP).
+  useEffect(() => {
+    if (!firstBanner?.imageUrl) return;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = firstBanner.imageUrl;
+    link.fetchPriority = "high";
+    document.head.appendChild(link);
+    return () => {
+      link.remove();
+    };
+  }, [firstBanner?.imageUrl]);
 
   const goTo = useCallback(
     (next: number) => {
@@ -129,8 +161,19 @@ export function HomeHeroCarousel({
     [count]
   );
 
-  const goNext = useCallback(() => goTo(index + 1), [goTo, index]);
-  const goPrev = useCallback(() => goTo(index - 1), [goTo, index]);
+  const goNext = useCallback(() => {
+    setIndex((current) => {
+      if (count <= 1) return current;
+      return (current + 1) % count;
+    });
+  }, [count]);
+
+  const goPrev = useCallback(() => {
+    setIndex((current) => {
+      if (count <= 1) return current;
+      return (current - 1 + count) % count;
+    });
+  }, [count]);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -202,7 +245,7 @@ export function HomeHeroCarousel({
     }, 50);
   };
 
-  if (!active) return null;
+  if (count === 0) return null;
 
   return (
     <div
@@ -227,22 +270,25 @@ export function HomeHeroCarousel({
       >
         <div className="hero-float-card">
           <div className="relative aspect-[2/1] w-full max-h-[min(42vw,220px)] sm:max-h-[280px] lg:max-h-none lg:aspect-[4/3] xl:min-h-[18rem]">
-            <AnimatePresence mode="wait" initial={false}>
-              <m.div
-                key={active.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.28, ease: "easeOut" }}
-                className="absolute inset-0"
-              >
+            {/* Mount active + neighbors only (first always). Avoids remount churn and
+                prevents lazy slides in the viewport from all downloading at once. */}
+            {banners.map((banner, i) => {
+              const isNeighbor =
+                count > 1 &&
+                (i === (index + 1) % count || i === (index - 1 + count) % count);
+              const shouldRender = i === 0 || i === index || isNeighbor;
+              if (!shouldRender) return null;
+
+              return (
                 <BannerSlide
-                  banner={active}
-                  priority={index === 0}
+                  key={banner.id}
+                  banner={banner}
+                  priority={i === 0}
+                  active={i === index}
                   swipeLockRef={swipeLock}
                 />
-              </m.div>
-            </AnimatePresence>
+              );
+            })}
           </div>
 
           {showArrows && count > 1 ? (

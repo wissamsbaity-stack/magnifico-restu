@@ -18,8 +18,18 @@ export default async function HomePage() {
     (item) => item.isAvailable && (item.isPopular || item.isBestSeller)
   );
 
+  const firstHeroImage = banners[0]?.imageUrl;
+
   return (
     <>
+      {firstHeroImage ? (
+        <link
+          rel="preload"
+          as="image"
+          href={firstHeroImage}
+          fetchPriority="high"
+        />
+      ) : null}
       <HomePageClientEffects />
       <Hero banners={banners} />
       <CategoriesPreview categories={categories} menuItems={items} />

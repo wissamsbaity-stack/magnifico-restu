@@ -12,49 +12,47 @@ export const overlayFade = {
 };
 
 export const drawerSpring = {
-  type: "spring" as const,
-  stiffness: 360,
-  damping: 36,
-  mass: 0.9,
+  type: "tween" as const,
+  duration: 0.22,
+  ease: easeOut,
 };
 
 export const modalSpring = {
-  type: "spring" as const,
-  stiffness: 420,
-  damping: 32,
-  mass: 0.9,
+  type: "tween" as const,
+  duration: 0.2,
+  ease: easeOut,
 };
 
 export const categoryCrossFade = {
-  initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -6 },
-  transition: { duration: 0.22, ease: easeOut } satisfies Transition,
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.12, ease: easeOut } satisfies Transition,
 };
 
 export const pageEnter = {
-  initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -6 },
-  transition: { duration: 0.28, ease: easeOut } satisfies Transition,
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.14, ease: easeOut } satisfies Transition,
 };
 
 export const staggerContainerVariants: Variants = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.04,
-      delayChildren: 0.03,
+      staggerChildren: 0.02,
+      delayChildren: 0,
     },
   },
 };
 
 export const staggerItemVariants: Variants = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: { opacity: 0, y: 8 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.32, ease: easeOut },
+    transition: { duration: 0.2, ease: easeOut },
   },
 };
 

@@ -4,7 +4,6 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Truck } from "lucide-react";
-import { AnimatePresence, m } from "@/lib/motion";
 import { WhatsAppIcon } from "@/components/icons/BrandIcons";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -39,20 +38,6 @@ const initialForm: DeliveryDetails = {
   street: "",
   building: "",
   deliveryInstructions: "",
-};
-
-const fieldCollapse = {
-  initial: { height: 0, opacity: 0 },
-  animate: {
-    height: "auto",
-    opacity: 1,
-    transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1] as const },
-  },
-  exit: {
-    height: 0,
-    opacity: 0,
-    transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] as const },
-  },
 };
 
 export function CheckoutForm({
@@ -232,115 +217,86 @@ export function CheckoutForm({
           Lebanese number -- XX XXX XXX
         </p>
 
-        <AnimatePresence initial={false} mode="wait">
-          {isDelivery ? (
-            <m.div
-              key="delivery-fields"
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={fieldCollapse}
-              className="space-y-5 overflow-hidden"
-            >
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Input
-                  label="City"
-                  placeholder="City"
-                  value={form.city}
-                  onChange={(e) => updateField("city", e.target.value)}
-                  error={errors.city}
-                  required
-                />
-                <Input
-                  label="Street"
-                  placeholder="Street / area"
-                  value={form.street}
-                  onChange={(e) => updateField("street", e.target.value)}
-                  error={errors.street}
-                  required
-                />
-              </div>
-
+        {isDelivery ? (
+          <div className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
               <Input
-                label="Building"
-                placeholder="Apt 4B, Floor 2, Villa 12..."
-                value={form.building}
-                onChange={(e) => updateField("building", e.target.value)}
-                error={errors.building}
+                label="City"
+                placeholder="City"
+                value={form.city}
+                onChange={(e) => updateField("city", e.target.value)}
+                error={errors.city}
                 required
               />
+              <Input
+                label="Street"
+                placeholder="Street / area"
+                value={form.street}
+                onChange={(e) => updateField("street", e.target.value)}
+                error={errors.street}
+                required
+              />
+            </div>
 
-              <Textarea
-                label="Delivery Instructions"
-                labelHint="(Optional)"
-                placeholder="Ring the doorbell, gate code, landmarks..."
-                value={form.deliveryInstructions}
-                onChange={(e) =>
-                  updateField("deliveryInstructions", e.target.value)
-                }
-                rows={3}
-              />
-            </m.div>
-          ) : (
-            <m.div
-              key="pickup-note"
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={fieldCollapse}
-              className="overflow-hidden"
-            >
-              <Textarea
-                label="Order Note"
-                labelHint="(Optional)"
-                placeholder="Allergies, pickup time, special requests..."
-                value={form.deliveryInstructions}
-                onChange={(e) =>
-                  updateField("deliveryInstructions", e.target.value)
-                }
-                rows={3}
-              />
-            </m.div>
-          )}
-        </AnimatePresence>
+            <Input
+              label="Building"
+              placeholder="Apt 4B, Floor 2, Villa 12..."
+              value={form.building}
+              onChange={(e) => updateField("building", e.target.value)}
+              error={errors.building}
+              required
+            />
+
+            <Textarea
+              label="Delivery Instructions"
+              labelHint="(Optional)"
+              placeholder="Ring the doorbell, gate code, landmarks..."
+              value={form.deliveryInstructions}
+              onChange={(e) =>
+                updateField("deliveryInstructions", e.target.value)
+              }
+              rows={3}
+            />
+          </div>
+        ) : (
+          <Textarea
+            label="Order Note"
+            labelHint="(Optional)"
+            placeholder="Allergies, pickup time, special requests..."
+            value={form.deliveryInstructions}
+            onChange={(e) =>
+              updateField("deliveryInstructions", e.target.value)
+            }
+            rows={3}
+          />
+        )}
 
         <OrderSummary orderType={orderType} />
 
-        <AnimatePresence initial={false}>
-          {isDelivery ? (
-            <m.div
-              key={isBuiltIn ? "builtin-delivery-fee" : "whatsapp-delivery-fee"}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={fieldCollapse}
-              className="overflow-hidden"
-            >
-              <div className="rounded-xl border border-brand-yellow/20 bg-brand-yellow/10 p-4 sm:p-5">
-                <div className="flex gap-3 sm:gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-yellow/25 ring-1 ring-brand-yellow/30">
-                    <Truck className="h-5 w-5 text-brand-pink" aria-hidden />
-                  </div>
-                  <div className="min-w-0 space-y-1">
-                    <p className="text-sm font-medium text-cream">Delivery fee</p>
-                    {isBuiltIn ? (
-                      <p className="text-sm text-muted">
-                        Delivery Fee:{" "}
-                        <span className="font-semibold text-brand-pink">
-                          {formatPrice(appliedDeliveryFee)}
-                        </span>
-                      </p>
-                    ) : (
-                      <p className="text-sm text-muted">
-                        Delivery fee confirmed via WhatsApp.
-                      </p>
-                    )}
-                  </div>
-                </div>
+        {isDelivery ? (
+          <div className="rounded-xl border border-brand-yellow/20 bg-brand-yellow/10 p-4 sm:p-5">
+            <div className="flex gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-yellow/25 ring-1 ring-brand-yellow/30">
+                <Truck className="h-5 w-5 text-brand-pink" aria-hidden />
               </div>
-            </m.div>
-          ) : null}
-        </AnimatePresence>
+              <div className="min-w-0 space-y-1">
+                <p className="text-sm font-medium text-cream">Delivery fee</p>
+                {isBuiltIn ? (
+                  <p className="text-sm text-muted">
+                    Delivery Fee:{" "}
+                    <span className="font-semibold text-brand-pink">
+                      {formatPrice(appliedDeliveryFee)}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted">
+                    Delivery fee confirmed via WhatsApp.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {submitError ? (
           <p className="text-sm text-red-400">{submitError}</p>

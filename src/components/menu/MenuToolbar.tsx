@@ -1,6 +1,5 @@
 "use client";
 
-import { m, LayoutGroup } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/types/menu";
 import { MenuSearchBar } from "@/components/menu/MenuExpandableSearch";
@@ -15,13 +14,6 @@ interface MenuToolbarProps {
   className?: string;
 }
 
-const pillSpring = {
-  type: "spring" as const,
-  stiffness: 520,
-  damping: 38,
-  mass: 0.75,
-};
-
 function CategoryChip({
   active,
   onClick,
@@ -32,7 +24,7 @@ function CategoryChip({
   label: string;
 }) {
   return (
-    <m.button
+    <button
       type="button"
       role="tab"
       onClick={onClick}
@@ -40,22 +32,15 @@ function CategoryChip({
       className={cn(
         "relative inline-flex h-[46px] shrink-0 snap-start items-center justify-center rounded-full px-5",
         "text-[13px] font-bold tracking-tight sm:h-11 sm:px-6 sm:text-sm",
-        "motion-safe:transition-[color,background-color,box-shadow,transform] motion-safe:duration-150",
+        "transition-[color,background-color,box-shadow,transform] duration-150",
         "motion-safe:active:scale-[0.96]",
         active
-          ? "text-white shadow-sm"
+          ? "bg-brand-pink text-white shadow-sm ring-1 ring-brand-pink/40"
           : "bg-ink/[0.06] text-cream/80 ring-1 ring-brand-pink/50 hover:bg-brand-pink/12 hover:text-cream hover:ring-brand-pink/70"
       )}
     >
-      {active ? (
-        <m.span
-          layoutId="menu-category-active"
-          className="absolute inset-0 rounded-full bg-brand-pink ring-1 ring-brand-pink/40 shadow-[0_2px_10px_rgb(var(--color-pink)/0.35)]"
-          transition={pillSpring}
-        />
-      ) : null}
       <span className="relative z-10 whitespace-nowrap">{label}</span>
-    </m.button>
+    </button>
   );
 }
 
@@ -73,49 +58,45 @@ export function MenuToolbar({
   className,
 }: MenuToolbarProps) {
   return (
-    <LayoutGroup id="menu-toolbar">
-      <div
-        className={cn(
-          "menu-toolbar-panel overflow-hidden rounded-[1.75rem] bg-surface-raised shadow-float ring-1 ring-line/6",
-          className
-        )}
-      >
-        {/* Search */}
-        <div className="border-b border-line/6 px-4 py-2.5 sm:px-5 sm:py-4">
-          <MenuSearchBar
-            embedded
-            value={searchQuery}
-            onChange={onSearchChange}
-            resultCount={searchResultCount}
-          />
-        </div>
+    <div
+      className={cn(
+        "menu-toolbar-panel overflow-hidden rounded-[1.75rem] bg-surface-raised shadow-float ring-1 ring-line/6",
+        className
+      )}
+    >
+      <div className="border-b border-line/6 px-4 py-2.5 sm:px-5 sm:py-4">
+        <MenuSearchBar
+          embedded
+          value={searchQuery}
+          onChange={onSearchChange}
+          resultCount={searchResultCount}
+        />
+      </div>
 
-        {/* Categories */}
-        <div className="relative bg-ink/[0.03]">
-          <div className="overflow-x-auto py-2.5 scrollbar-none sm:py-3">
-            <div
-              className="flex w-max min-w-full snap-x snap-mandatory gap-3.5 px-5 sm:gap-4 sm:px-6"
-              role="tablist"
-              aria-label="Menu categories"
-            >
+      <div className="relative bg-ink/[0.03]">
+        <div className="overflow-x-auto py-2.5 scrollbar-none sm:py-3">
+          <div
+            className="flex w-max min-w-full snap-x snap-mandatory gap-3.5 px-5 sm:gap-4 sm:px-6"
+            role="tablist"
+            aria-label="Menu categories"
+          >
+            <CategoryChip
+              active={activeCategory === "all"}
+              onClick={() => onCategoryChange("all")}
+              label="All Items"
+            />
+            {categories.map((category) => (
               <CategoryChip
-                active={activeCategory === "all"}
-                onClick={() => onCategoryChange("all")}
-                label="All Items"
+                key={category.id}
+                active={activeCategory === category.id}
+                onClick={() => onCategoryChange(category.id)}
+                label={category.name}
               />
-              {categories.map((category) => (
-                <CategoryChip
-                  key={category.id}
-                  active={activeCategory === category.id}
-                  onClick={() => onCategoryChange(category.id)}
-                  label={category.name}
-                />
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </div>
-    </LayoutGroup>
+    </div>
   );
 }
 

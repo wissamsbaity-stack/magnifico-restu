@@ -2,10 +2,8 @@
 
 import Image from "next/image";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { m, AnimatePresence } from "@/lib/motion";
 import { useCart } from "@/contexts/CartContext";
 import { getCartLineTotal } from "@/lib/cart";
-import { popInTransition, popInVariants } from "@/lib/motion-presets";
 import { formatPrice } from "@/lib/utils";
 import type { CartItem } from "@/types/cart";
 
@@ -21,14 +19,7 @@ export function CartItemRow({ item }: CartItemRowProps) {
   const lineTotal = getCartLineTotal(item);
 
   return (
-    <m.div
-      layout="position"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: 20, transition: { duration: 0.18 } }}
-      transition={{ duration: 0.22, ease: [0.25, 0.1, 0.25, 1] }}
-      className="cart-drawer-item-bg space-y-3 rounded-2xl border p-4 shadow-card motion-safe:will-change-[opacity,transform]"
-    >
+    <div className="cart-drawer-item-bg space-y-3 rounded-2xl border p-4 shadow-card">
       <div className="flex gap-3">
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl ring-1 ring-brand-yellow/20">
           <Image
@@ -67,19 +58,9 @@ export function CartItemRow({ item }: CartItemRowProps) {
           >
             <Minus className="h-4 w-4" />
           </button>
-          <AnimatePresence mode="popLayout" initial={false}>
-            <m.span
-              key={item.quantity}
-              variants={popInVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={popInTransition}
-              className="inline-flex w-8 items-center justify-center text-sm font-semibold text-cream"
-            >
-              {item.quantity}
-            </m.span>
-          </AnimatePresence>
+          <span className="inline-flex w-8 items-center justify-center text-sm font-semibold text-cream">
+            {item.quantity}
+          </span>
           <button
             type="button"
             onClick={() => updateQuantity(item.id, item.quantity + 1)}
@@ -89,19 +70,9 @@ export function CartItemRow({ item }: CartItemRowProps) {
             <Plus className="h-4 w-4" />
           </button>
         </div>
-        <AnimatePresence mode="popLayout" initial={false}>
-          <m.p
-            key={lineTotal}
-            variants={popInVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={popInTransition}
-            className="text-sm font-semibold text-cream"
-          >
-            {formatPrice(lineTotal)}
-          </m.p>
-        </AnimatePresence>
+        <p className="text-sm font-semibold text-cream">
+          {formatPrice(lineTotal)}
+        </p>
       </div>
 
       <div>
@@ -120,6 +91,6 @@ export function CartItemRow({ item }: CartItemRowProps) {
           className="cart-drawer-field-bg w-full rounded-xl border px-3 py-2 text-sm text-cream placeholder:text-muted/60 transition-colors focus:border-brand-pink/45 focus:outline-none focus:ring-2 focus:ring-brand-pink/15"
         />
       </div>
-    </m.div>
+    </div>
   );
 }
