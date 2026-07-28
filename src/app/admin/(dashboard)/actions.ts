@@ -121,6 +121,17 @@ export async function createMenuItem(formData: FormData): Promise<ActionResult> 
 
   const slug = `${slugify(name)}-${Date.now()}`;
   const id = `item-${Date.now()}`;
+
+  const { data: lastRows } = await supabase
+    .from("menu_items")
+    .select("display_order")
+    .eq("category_id", categoryId)
+    .order("display_order", { ascending: false })
+    .limit(1);
+
+  const lastInCategory = lastRows?.[0] as { display_order: number } | undefined;
+  const displayOrder = (lastInCategory?.display_order ?? -1) + 1;
+
   const { error } = await insertRow(supabase, "menu_items", {
     id,
     name,
@@ -130,6 +141,7 @@ export async function createMenuItem(formData: FormData): Promise<ActionResult> 
     price,
     image_url: imageUrl,
     image_crop: readCrop(formData, "image_crop"),
+    display_order: displayOrder,
     is_popular: formData.get("is_popular") === "on",
     is_best_seller: formData.get("is_best_seller") === "on",
     is_available: formData.get("is_available") !== "off",
@@ -153,20 +165,42 @@ export async function updateMenuItem(formData: FormData): Promise<ActionResult> 
 
   if (!id || !name || !categoryId) return fail("Missing required fields");
 
+  const { data: existingRows } = await supabase
+    .from("menu_items")
+    .select("category_id")
+    .eq("id", id)
+    .limit(1);
+
+  const existing = existingRows?.[0] as { category_id: string } | undefined;
+
+  const patch: Tables["menu_items"]["Update"] = {
+    name,
+    category_id: categoryId,
+    description: description || null,
+    price,
+    image_url: imageUrl,
+    image_crop: readCrop(formData, "image_crop"),
+    is_popular: formData.get("is_popular") === "on",
+    is_best_seller: formData.get("is_best_seller") === "on",
+    is_available: formData.get("is_available") === "on",
+  };
+
+  if (existing && existing.category_id !== categoryId) {
+    const { data: lastRows } = await supabase
+      .from("menu_items")
+      .select("display_order")
+      .eq("category_id", categoryId)
+      .order("display_order", { ascending: false })
+      .limit(1);
+
+    const lastInCategory = lastRows?.[0] as { display_order: number } | undefined;
+    patch.display_order = (lastInCategory?.display_order ?? -1) + 1;
+  }
+
   const { error } = await updateRow(
     supabase,
     "menu_items",
-    {
-      name,
-      category_id: categoryId,
-      description: description || null,
-      price,
-      image_url: imageUrl,
-      image_crop: readCrop(formData, "image_crop"),
-      is_popular: formData.get("is_popular") === "on",
-      is_best_seller: formData.get("is_best_seller") === "on",
-      is_available: formData.get("is_available") === "on",
-    },
+    patch,
     "id",
     id
   );
@@ -182,6 +216,33 @@ export async function deleteMenuItem(id: string): Promise<ActionResult> {
   const { supabase } = await requireAdmin();
   const { error } = await supabase.from("menu_items").delete().eq("id", id);
   if (error) return fail(error.message);
+  revalidatePath("/admin/menu");
+  revalidatePath("/menu");
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function reorderMenuItems(
+  categoryId: string,
+  orderedIds: string[]
+): Promise<ActionResult> {
+  const { supabase } = await requireAdmin();
+  if (!categoryId || !orderedIds.length) return { ok: true };
+
+  const updates = orderedIds.map((id, index) =>
+    updateRow(
+      supabase,
+      "menu_items",
+      { display_order: index },
+      "id",
+      id
+    )
+  );
+
+  const results = await Promise.all(updates);
+  const failed = results.find((r) => r.error);
+  if (failed?.error) return fail(failed.error.message);
+
   revalidatePath("/admin/menu");
   revalidatePath("/menu");
   revalidatePath("/");

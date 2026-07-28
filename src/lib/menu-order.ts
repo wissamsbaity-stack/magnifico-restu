@@ -1,8 +1,30 @@
 import type { Category, MenuItem } from "@/types/menu";
 
+type OrderableMenuItem = {
+  name?: string | null;
+  displayOrder?: number | null;
+  display_order?: number | null;
+};
+
+function readDisplayOrder(item: OrderableMenuItem): number {
+  return item.displayOrder ?? item.display_order ?? 0;
+}
+
 /** Compare two menu items: displayOrder first, then name A→Z. */
 export function compareMenuItems(a: MenuItem, b: MenuItem): number {
-  const orderDiff = (a.displayOrder ?? 0) - (b.displayOrder ?? 0);
+  const orderDiff = readDisplayOrder(a) - readDisplayOrder(b);
+  if (orderDiff !== 0) return orderDiff;
+  return (a.name ?? "").localeCompare(b.name ?? "", undefined, {
+    sensitivity: "base",
+  });
+}
+
+/** Same ordering rules for admin rows (snake_case DB fields). */
+export function compareMenuItemRows(
+  a: OrderableMenuItem,
+  b: OrderableMenuItem
+): number {
+  const orderDiff = readDisplayOrder(a) - readDisplayOrder(b);
   if (orderDiff !== 0) return orderDiff;
   return (a.name ?? "").localeCompare(b.name ?? "", undefined, {
     sensitivity: "base",

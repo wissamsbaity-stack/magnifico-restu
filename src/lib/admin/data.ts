@@ -75,7 +75,8 @@ export async function getAdminMenuItems(): Promise<MenuItemRow[]> {
     .select(
       "id, category_id, name, slug, description, price, image_url, is_popular, is_best_seller, is_available, tags, display_order, image_crop, created_at, updated_at"
     )
-    .order("name");
+    .order("display_order", { ascending: true })
+    .order("name", { ascending: true });
   if (error) throw error;
   return data ?? [];
 }

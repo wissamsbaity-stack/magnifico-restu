@@ -86,16 +86,16 @@ export const Hero = memo(function Hero({ banners = [] }: HeroProps) {
       </div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 sm:px-6 lg:px-8">
-        <div className="grid w-full min-w-0 flex-1 items-stretch gap-5 py-3 pb-2 max-sm:gap-y-3 sm:items-center sm:gap-10 sm:py-12 sm:pb-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:py-16 lg:pb-12 xl:gap-20">
+        <div className="grid w-full min-w-0 flex-1 items-stretch gap-5 py-3 pb-2 max-sm:min-h-0 max-sm:grid-rows-[auto_minmax(0,1fr)] max-sm:gap-y-3 sm:items-center sm:gap-10 sm:py-12 sm:pb-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:py-16 lg:pb-12 xl:gap-20">
           <div className="hero-media relative order-1 mx-auto w-full min-w-0 max-w-full lg:order-2 lg:max-w-none lg:justify-self-end">
             {banners.length > 0 ? (
               <HomeHeroCarousel banners={banners} />
             ) : null}
           </div>
 
-          <div className="relative z-10 order-2 mx-auto flex w-full min-w-0 max-w-full flex-1 flex-col items-center text-center max-sm:px-0 lg:order-1 lg:mx-0 lg:flex-none lg:items-start lg:text-left">
-            {/* Mobile: title sits centered between carousel and Open/Closed badge */}
-            <div className="flex w-full flex-1 flex-col items-center justify-center max-sm:py-2 lg:flex-none lg:items-start lg:justify-start lg:py-0">
+          <div className="relative z-10 order-2 mx-auto flex w-full min-w-0 max-w-full min-h-0 flex-1 flex-col items-center text-center max-sm:px-0 lg:order-1 lg:mx-0 lg:min-h-0 lg:flex-none lg:items-start lg:text-left">
+            {/* Mobile: title vertically centered between carousel and Open badge */}
+            <div className="flex w-full min-h-0 flex-1 flex-col items-center justify-center lg:flex-none lg:items-start lg:justify-start">
               <h1 className="mx-auto w-full max-w-full text-center font-display text-[clamp(1.75rem,8.2vw,2.75rem)] font-bold uppercase leading-[0.94] tracking-tight text-cream sm:text-[3.75rem] sm:leading-[0.92] lg:mx-0 lg:text-left lg:text-[4.75rem] xl:text-[5.5rem]">
                 <span className="block text-center lg:text-left">{lead}</span>
                 {tail ? (
@@ -106,7 +106,7 @@ export const Hero = memo(function Hero({ banners = [] }: HeroProps) {
               </h1>
             </div>
 
-            <div className="mt-3 flex shrink-0 items-center justify-center self-center sm:mt-4 lg:self-start lg:justify-start">
+            <div className="flex shrink-0 items-center justify-center self-center max-sm:mt-1 sm:mt-4 lg:self-start lg:justify-start">
               <BranchOpenBadge
                 hours={hours}
                 className="max-sm:px-3 max-sm:py-1.5 max-sm:text-sm"

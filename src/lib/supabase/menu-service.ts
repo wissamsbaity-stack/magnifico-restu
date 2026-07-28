@@ -25,10 +25,11 @@ class SupabaseMenuService implements MenuService {
   async getMenuItems(): Promise<MenuItem[]> {
     const supabase = await this.client();
     const { data, error } = await supabase
-      .from("menu_items")
-      .select("*")
-      .eq("is_available", true)
-      .order("name", { ascending: true });
+    .from("menu_items")
+    .select("*")
+    .eq("is_available", true)
+    .order("display_order", { ascending: true })
+    .order("name", { ascending: true });
     if (error) throw error;
     return sortMenuItems((data ?? []).map(mapMenuItem));
   }
