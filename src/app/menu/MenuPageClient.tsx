@@ -26,7 +26,11 @@ function MenuItemGrid({
   priorityCount?: number;
 }) {
   return (
-    <StaggerGrid className={LIST_CLASS}>
+    <StaggerGrid
+      key={items.map((item) => item.id).join(":")}
+      className={LIST_CLASS}
+      animateOnMount
+    >
       {items.map((item, index) => (
         <MenuItemCard
           key={item.id}
