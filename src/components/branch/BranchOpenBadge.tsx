@@ -53,21 +53,23 @@ export function BranchOpenBadge({
 
   return (
     <span
+      aria-label={status.open ? "Currently open" : "Currently closed"}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
+        "inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.14em] shadow-[0_1px_0_rgb(255_255_255/0.08)_inset] backdrop-blur-sm",
         status.open
-          ? "bg-[rgb(214_236_186)] text-[rgb(40_96_18)] ring-1 ring-[rgb(130_191_65)/0.45]"
-          : "bg-[rgb(255_220_226)] text-[rgb(168_32_52)] ring-1 ring-brand-pink/40",
+          ? "border-emerald-300/30 bg-emerald-950/40 text-emerald-100"
+          : "border-rose-300/25 bg-rose-950/35 text-rose-100",
         className
       )}
     >
       <span
+        aria-hidden
         className={cn(
-          "h-1.5 w-1.5 rounded-full",
-          status.open ? "bg-[rgb(70_140_30)]" : "bg-[rgb(200_45_70)]"
+          "h-1.5 w-1.5 rounded-full ring-2 ring-current/15",
+          status.open ? "bg-emerald-300" : "bg-rose-300"
         )}
       />
-      {status.open ? "Open now" : "Closed"}
+      {status.open ? "Open" : "Closed"}
     </span>
   );
 }
