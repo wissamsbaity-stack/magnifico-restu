@@ -23,7 +23,7 @@ export const SPLASH_ARTWORK_WEBP = "/branding/magnifico-splash.webp";
 export const SPLASH_ARTWORK_FALLBACK = "/branding/magnifico-splash.jpg";
 
 /** Prevent a distracting flash when the first screen is already warm. */
-export const SPLASH_MIN_VISIBLE_MS = 650;
+export const SPLASH_MIN_VISIBLE_MS = 1700;
 
 /** Stop waiting for first-screen assets after this point. */
 export const SPLASH_READY_TIMEOUT_MS = 1800;

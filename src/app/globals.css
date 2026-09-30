@@ -1460,7 +1460,7 @@
     box-shadow: 0 0 12px rgb(239 76 100 / 0.42);
     transform: scaleX(0.06);
     transform-origin: left center;
-    animation: splash-progress-fill 1.8s cubic-bezier(0.22, 0.72, 0.22, 1)
+    animation: splash-progress-fill 1.7s cubic-bezier(0.22, 0.72, 0.22, 1)
       forwards;
     will-change: transform;
   }
