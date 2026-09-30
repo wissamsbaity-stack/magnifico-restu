@@ -1,35 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSettings } from "@/contexts/SettingsContext";
 import {
-  SPLASH_FADE_IN_MS,
+  SPLASH_ARTWORK_AVIF,
+  SPLASH_ARTWORK_FALLBACK,
+  SPLASH_ARTWORK_WEBP,
   SPLASH_FADE_OUT_MS,
   SPLASH_FAILSAFE_MS,
-  SPLASH_HOLD_MS,
-  SPLASH_LOGO_TIMEOUT_MS,
+  SPLASH_MIN_VISIBLE_MS,
+  SPLASH_READY_TIMEOUT_MS,
   SPLASH_STORAGE_KEY,
   notifySplashComplete,
 } from "@/lib/splash";
 import { acquireScrollLock, forceUnlockScroll, setSplashLockFlag } from "@/lib/scroll-lock";
 import { cn } from "@/lib/utils";
-import { LOGO_HEIGHT, LOGO_WIDTH } from "@/lib/branding/logo";
 
 /**
  * Phases:
- *  - "cover":   plain branded overlay on top of the (already rendered) site.
- *  - "visible": logo loaded — run the fade-in / glow / dots animations.
+ *  - "visible": full-viewport artwork is visible while the first screen readies.
  *  - "exit":    fade the whole overlay out, revealing the site.
  *  - "done":    overlay unmounted.
  *
  * Scroll is locked via a ref-counted manager so branch/modals can't restore a
  * stale `overflow: hidden` after the splash ends.
  */
-type SplashPhase = "cover" | "visible" | "exit" | "done";
-
-function hasValidLogo(logo: unknown): logo is string {
-  return typeof logo === "string" && logo.trim().length > 0;
-}
+type SplashPhase = "visible" | "exit" | "done";
 
 function markSplashSeen() {
   try {
@@ -43,28 +38,27 @@ function markSplashSeen() {
 }
 
 function readInitialPhase(): SplashPhase {
-  if (typeof document === "undefined") return "cover";
+  if (typeof document === "undefined") return "visible";
   if (document.documentElement.classList.contains("splash-seen")) return "done";
   try {
     if (sessionStorage.getItem(SPLASH_STORAGE_KEY)) return "done";
   } catch {
     /* ignore */
   }
-  return "cover";
+  return "visible";
 }
 
 export function SplashScreen() {
-  const settings = useSettings();
-  const logo = settings?.branding?.logo;
-  const name = settings?.name ?? "";
-
   const [phase, setPhase] = useState<SplashPhase>(readInitialPhase);
 
   useEffect(() => {
     let cancelled = false;
-    let settled = false;
+    let exiting = false;
     let releaseLock: (() => void) | null = null;
     const timers: number[] = [];
+    const startedAt = performance.now();
+    let removeLoadListener: (() => void) | null = null;
+    let removeArtworkListeners: (() => void) | null = null;
 
     const addTimer = (fn: () => void, ms: number) => {
       timers.push(window.setTimeout(fn, ms));
@@ -82,7 +76,8 @@ export function SplashScreen() {
     };
 
     const finish = () => {
-      if (cancelled) return;
+      if (cancelled || exiting) return;
+      exiting = true;
       setPhase("exit");
       addTimer(() => {
         if (!cancelled) {
@@ -95,6 +90,10 @@ export function SplashScreen() {
     const cleanup = () => {
       cancelled = true;
       timers.forEach((id) => window.clearTimeout(id));
+      removeLoadListener?.();
+      removeLoadListener = null;
+      removeArtworkListeners?.();
+      removeArtworkListeners = null;
       setSplashLockFlag(false);
       releaseLock?.();
       releaseLock = null;
@@ -118,11 +117,10 @@ export function SplashScreen() {
     releaseLock = acquireScrollLock();
     setSplashLockFlag(true);
 
-    // Absolute JS failsafe: if anything stalls, unlock + reveal.
+    // Absolute JS failsafe: if any readiness signal stalls, unlock + reveal.
     addTimer(() => {
       if (cancelled) return;
-      if (!settled) {
-        settled = true;
+      if (!exiting) {
         finish();
         return;
       }
@@ -133,78 +131,90 @@ export function SplashScreen() {
       }
     }, SPLASH_FAILSAFE_MS);
 
-    if (!hasValidLogo(logo)) {
-      settled = true;
-      finish();
-      return cleanup;
-    }
-
-    const settle = (ready: boolean) => {
-      if (settled || cancelled) return;
-      settled = true;
-      if (ready) {
-        setPhase("visible");
-        addTimer(finish, SPLASH_FADE_IN_MS + SPLASH_HOLD_MS);
-      } else {
-        finish();
+    const artworkReady = new Promise<void>((resolve) => {
+      const image = document.querySelector<HTMLImageElement>(".splash-artwork");
+      if (!image || (image.complete && image.naturalWidth > 0)) {
+        resolve();
+        return;
       }
-    };
 
-    const img = new window.Image();
-    img.onload = () => settle(true);
-    img.onerror = () => settle(false);
-    img.src = logo;
+      const settle = () => resolve();
+      image.addEventListener("load", settle, { once: true });
+      image.addEventListener("error", settle, { once: true });
+      removeArtworkListeners = () => {
+        image.removeEventListener("load", settle);
+        image.removeEventListener("error", settle);
+      };
+    });
 
-    if (img.complete && img.naturalWidth > 0) {
-      settle(true);
-    }
+    const pageReady = new Promise<void>((resolve) => {
+      if (document.readyState === "complete") {
+        resolve();
+        return;
+      }
+      const onLoad = () => resolve();
+      window.addEventListener("load", onLoad, { once: true });
+      removeLoadListener = () => window.removeEventListener("load", onLoad);
+    });
 
-    addTimer(() => settle(false), SPLASH_LOGO_TIMEOUT_MS);
+    const fontsReady = document.fonts?.ready
+      ? document.fonts.ready.then(() => undefined, () => undefined)
+      : Promise.resolve();
+
+    const readinessTimeout = new Promise<void>((resolve) => {
+      addTimer(resolve, SPLASH_READY_TIMEOUT_MS);
+    });
+
+    Promise.race([
+      Promise.all([artworkReady, pageReady, fontsReady]).then(() => undefined),
+      readinessTimeout,
+    ]).then(() => {
+      if (cancelled) return;
+      const remaining = Math.max(
+        0,
+        SPLASH_MIN_VISIBLE_MS - (performance.now() - startedAt)
+      );
+      addTimer(finish, remaining);
+    });
 
     return () => {
-      img.onload = null;
-      img.onerror = null;
       cleanup();
     };
-    // phase is only used for the already-done short-circuit on mount
+    // phase is only used for the already-done short-circuit on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logo]);
+  }, []);
 
   if (phase === "done") return null;
-
-  const showBranding = phase === "visible" || phase === "exit";
 
   return (
     <div
       className={cn(
-        "splash-screen fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-surface",
-        phase === "visible" && "splash-screen--visible",
+        "splash-screen fixed inset-0 z-[9999] overflow-hidden bg-[#F7B232]",
         phase === "exit" && "splash-screen--exit"
       )}
-      aria-hidden="true"
+      role="status"
+      aria-label="Loading Magnifico"
     >
-      {showBranding && hasValidLogo(logo) && (
-        <>
-          <div className="splash-logo-wrap flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={logo}
-              alt={name}
-              width={LOGO_WIDTH}
-              height={LOGO_HEIGHT}
-              decoding="async"
-              draggable={false}
-              className="splash-logo h-auto w-40 object-contain sm:w-52"
-            />
-          </div>
+      <picture>
+        <source srcSet={SPLASH_ARTWORK_AVIF} type="image/avif" />
+        <source srcSet={SPLASH_ARTWORK_WEBP} type="image/webp" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={SPLASH_ARTWORK_FALLBACK}
+          alt=""
+          width={852}
+          height={1846}
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          draggable={false}
+          className="splash-artwork"
+        />
+      </picture>
 
-          <div className="splash-dots mt-10 flex items-center gap-2.5">
-            <span className="splash-dot" />
-            <span className="splash-dot" />
-            <span className="splash-dot" />
-          </div>
-        </>
-      )}
+      <div className="splash-loading" aria-hidden="true">
+        <span className="splash-loading__progress" />
+      </div>
     </div>
   );
 }

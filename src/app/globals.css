@@ -1388,28 +1388,6 @@
     }
   }
 
-  @keyframes splash-logo-in {
-    from {
-      opacity: 0;
-      transform: scale(0.92);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes splash-logo-out {
-    from {
-      opacity: 1;
-      transform: scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: scale(0.96);
-    }
-  }
-
   @keyframes splash-screen-out {
     from {
       opacity: 1;
@@ -1419,100 +1397,93 @@
     }
   }
 
-  @keyframes splash-glow-pulse {
-    0%,
+  @keyframes splash-progress-fill {
+    0% {
+      transform: scaleX(0.06);
+    }
+    45% {
+      transform: scaleX(0.62);
+    }
+    78% {
+      transform: scaleX(0.86);
+    }
     100% {
-      opacity: 0.55;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.78;
-      transform: scale(1.14);
-    }
-  }
-
-  @keyframes splash-dot-bounce {
-    0%,
-    80%,
-    100% {
-      opacity: 0.35;
-      transform: translateY(0);
-    }
-    40% {
-      opacity: 1;
-      transform: translateY(-5px);
+      transform: scaleX(1);
     }
   }
 
   .splash-screen {
     animation: splash-failsafe 0.4s ease 2800ms forwards;
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+    isolation: isolate;
   }
 
-  .splash-screen .splash-logo {
-    opacity: 0;
-    transform: scale(0.92);
-    will-change: opacity, transform;
-  }
-
-  .splash-screen--visible .splash-logo {
-    opacity: 1;
-    animation: splash-logo-in 0.4s ease-out forwards;
-  }
-
-  .splash-screen--exit .splash-logo {
-    animation: splash-logo-out 0.4s ease-in forwards;
+  .splash-artwork {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    object-position: center center;
+    user-select: none;
+    -webkit-user-drag: none;
   }
 
   /* Overrides the base failsafe animation with the real fade-out. */
   .splash-screen--exit {
-    animation: splash-screen-out 0.4s ease-in forwards;
+    animation: splash-screen-out 0.36s ease-in forwards;
   }
 
-  .splash-glow {
-    filter: blur(48px);
-    opacity: 0.6;
-    will-change: opacity, transform;
-  }
-
-  .splash-screen--visible .splash-glow {
-    animation: splash-glow-pulse 1.4s ease-in-out infinite;
-  }
-
-  .splash-dot {
-    height: 6px;
-    width: 6px;
+  .splash-loading {
+    position: absolute;
+    top: calc(38% + clamp(20px, 2.75vh, 30px));
+    left: 50%;
+    z-index: 1;
+    height: 5px;
+    width: clamp(8.75rem, 40vw, 13rem);
+    overflow: hidden;
     border-radius: 9999px;
-    background: rgb(var(--color-accent));
-    opacity: 0.35;
-    will-change: opacity, transform;
+    background: rgb(45 45 45 / 0.5);
+    box-shadow: 0 1px 2px rgb(45 45 45 / 0.18);
+    transform: translateX(-50%);
   }
 
-  .splash-screen--visible .splash-dot {
-    animation: splash-dot-bounce 0.9s ease-in-out infinite;
+  .splash-loading__progress {
+    display: block;
+    height: 100%;
+    width: 100%;
+    border-radius: inherit;
+    background: #ef4c64;
+    box-shadow: 0 0 12px rgb(239 76 100 / 0.42);
+    transform: scaleX(0.06);
+    transform-origin: left center;
+    animation: splash-progress-fill 1.8s cubic-bezier(0.22, 0.72, 0.22, 1)
+      forwards;
+    will-change: transform;
   }
 
-  .splash-screen--visible .splash-dot:nth-child(2) {
-    animation-delay: 0.15s;
-  }
+  @media (min-aspect-ratio: 1 / 1) {
+    .splash-artwork {
+      object-position: center 32%;
+    }
 
-  .splash-screen--visible .splash-dot:nth-child(3) {
-    animation-delay: 0.3s;
+    .splash-loading {
+      top: 43%;
+      width: clamp(12rem, 18vw, 17rem);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .splash-screen .splash-logo,
-    .splash-screen--visible .splash-logo,
-    .splash-screen--exit .splash-logo,
     .splash-screen--exit,
-    .splash-screen--visible .splash-glow,
-    .splash-screen--visible .splash-dot {
+    .splash-loading__progress {
       animation: none !important;
-      opacity: 1;
-      transform: none;
     }
 
-    .splash-glow {
-      opacity: 0.55;
+    .splash-loading__progress {
+      transform: scaleX(0.72);
     }
   }
 }

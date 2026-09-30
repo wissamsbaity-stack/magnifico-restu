@@ -17,21 +17,19 @@ export function notifySplashComplete() {
   window.dispatchEvent(new Event(SPLASH_COMPLETE_EVENT));
 }
 
-/**
- * Max time we wait for the logo image to be ready before giving up.
- * If the logo isn't ready within this window the splash is skipped entirely
- * and the website is shown immediately. Keeps slow networks from blocking.
- */
-export const SPLASH_LOGO_TIMEOUT_MS = 1000;
+/** Optimized, eagerly loaded splash artwork. */
+export const SPLASH_ARTWORK_AVIF = "/branding/magnifico-splash.avif";
+export const SPLASH_ARTWORK_WEBP = "/branding/magnifico-splash.webp";
+export const SPLASH_ARTWORK_FALLBACK = "/branding/magnifico-splash.jpg";
 
-/** Logo fade-in + slight scale-up duration (matches CSS animation). */
-export const SPLASH_FADE_IN_MS = 400;
+/** Prevent a distracting flash when the first screen is already warm. */
+export const SPLASH_MIN_VISIBLE_MS = 650;
 
-/** Hold at full visibility once the logo has faded in. */
-export const SPLASH_HOLD_MS = 700;
+/** Stop waiting for first-screen assets after this point. */
+export const SPLASH_READY_TIMEOUT_MS = 1800;
 
 /** Fade-out duration of the whole overlay (matches CSS animation). */
-export const SPLASH_FADE_OUT_MS = 400;
+export const SPLASH_FADE_OUT_MS = 360;
 
 /**
  * Absolute CSS-only safety net. Even if JavaScript never hydrates or throws,

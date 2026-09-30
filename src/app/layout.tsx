@@ -10,7 +10,7 @@ import { BranchProvider } from "@/contexts/BranchContext";
 import { getSiteSettings } from "@/lib/settings/site-settings";
 import { getBranches } from "@/lib/branch-service";
 import { buildRootMetadata } from "@/lib/settings/metadata";
-import { SPLASH_STORAGE_KEY } from "@/lib/splash";
+import { SPLASH_ARTWORK_AVIF, SPLASH_STORAGE_KEY } from "@/lib/splash";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -77,6 +77,13 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-svh font-sans brand-environment">
+        <link
+          rel="preload"
+          as="image"
+          href={SPLASH_ARTWORK_AVIF}
+          type="image/avif"
+          fetchPriority="high"
+        />
         <Script id="splash-preflight" strategy="beforeInteractive">
           {`try{if(sessionStorage.getItem("${SPLASH_STORAGE_KEY}")){document.documentElement.classList.add("splash-seen");}if("scrollRestoration" in history){history.scrollRestoration="manual";}setTimeout(function(){var d=document.documentElement;if(d.getAttribute("data-splash-lock")==="1"){d.style.overflow="";d.removeAttribute("data-splash-lock");var b=document.body;b.style.overflow="";b.style.position="";b.style.top="";b.style.width="";b.style.paddingRight="";}},3200);}catch(e){}`}
         </Script>
