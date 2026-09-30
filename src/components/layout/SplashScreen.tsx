@@ -59,6 +59,14 @@ export function SplashScreen() {
     const startedAt = performance.now();
     let removeLoadListener: (() => void) | null = null;
     let removeArtworkListeners: (() => void) | null = null;
+    let themeColorMeta: HTMLMetaElement | null = null;
+    let originalThemeColor: string | null = null;
+
+    const restoreBrowserChrome = () => {
+      if (themeColorMeta && originalThemeColor !== null) {
+        themeColorMeta.setAttribute("content", originalThemeColor);
+      }
+    };
 
     const addTimer = (fn: () => void, ms: number) => {
       timers.push(window.setTimeout(fn, ms));
@@ -66,6 +74,7 @@ export function SplashScreen() {
 
     const revealSite = () => {
       markSplashSeen();
+      restoreBrowserChrome();
       setSplashLockFlag(false);
       releaseLock?.();
       releaseLock = null;
@@ -94,6 +103,7 @@ export function SplashScreen() {
       removeLoadListener = null;
       removeArtworkListeners?.();
       removeArtworkListeners = null;
+      restoreBrowserChrome();
       setSplashLockFlag(false);
       releaseLock?.();
       releaseLock = null;
@@ -116,6 +126,14 @@ export function SplashScreen() {
 
     releaseLock = acquireScrollLock();
     setSplashLockFlag(true);
+
+    // iPhone Safari tints its browser chrome from theme-color. Keep those
+    // non-content areas dark while loading instead of showing flat yellow.
+    themeColorMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      originalThemeColor = themeColorMeta.getAttribute("content");
+      themeColorMeta.setAttribute("content", "#2D2D2D");
+    }
 
     // Absolute JS failsafe: if any readiness signal stalls, unlock + reveal.
     addTimer(() => {
