@@ -2,7 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async redirects() {
-    return [{ source: "/locations", destination: "/", permanent: true }];
+    return [
+      // TEMPORARY: Bypass the Supabase-dependent homepage until its quota is restored.
+      { source: "/", destination: "/menu", permanent: false },
+      { source: "/locations", destination: "/", permanent: true },
+    ];
   },
   // Soft-nav between admin sections can reuse recent RSC payloads.
   experimental: {
