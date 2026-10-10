@@ -2,7 +2,28 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth/admin";
+import { requireAdmin, requireAdminIdentity } from "@/lib/auth/admin";
+import { getAdminAuthBackend } from "@/lib/auth/backend";
+import { cloudflareAccessLogoutUrl } from "@/lib/auth/cloudflare-access";
+import { getContentBackend } from "@/lib/content-backend";
+import {
+  createD1Branch,
+  createD1Category,
+  createD1MenuBanner,
+  createD1MenuItem,
+  deleteD1Branch,
+  deleteD1Category,
+  deleteD1MenuBanner,
+  deleteD1MenuItem,
+  reorderD1MenuBanners,
+  reorderD1MenuItems,
+  toggleD1MenuBanner,
+  updateD1Branch,
+  updateD1Category,
+  updateD1MenuBanner,
+  updateD1MenuItem,
+  updateD1SiteSettings,
+} from "@/lib/cloudflare/admin-mutations";
 import { createServerClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/supabase/mappers";
 import { parseCrop } from "@/lib/image-crop";
@@ -42,14 +63,28 @@ function fail(message: string): ActionResult {
   return { ok: false, error: message };
 }
 
+async function runD1(operation: () => Promise<void>): Promise<ActionResult | null> {
+  if (getContentBackend() !== "d1") return null;
+  await requireAdminIdentity();
+  try {
+    await operation();
+    return { ok: true };
+  } catch (error) {
+    console.error("[admin D1 mutation]", error);
+    return fail(error instanceof Error ? error.message : "D1 operation failed");
+  }
+}
+
 export async function signOut(): Promise<void> {
+  if (getAdminAuthBackend() === "cloudflare-access") {
+    redirect(cloudflareAccessLogoutUrl());
+  }
   const supabase = await createServerClient();
   if (supabase) await supabase.auth.signOut();
   redirect("/admin/login");
 }
 
 export async function createCategory(formData: FormData): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const sortOrder = Number(formData.get("sort_order") ?? 0);
 
@@ -57,14 +92,20 @@ export async function createCategory(formData: FormData): Promise<ActionResult> 
 
   const slug = slugify(name);
   const id = `cat-${slug}`;
-  const { error } = await insertRow(supabase, "categories", {
-    id,
-    name,
-    slug,
-    sort_order: sortOrder,
-  });
-
-  if (error) return fail(error.message);
+  const d1Result = await runD1(() =>
+    createD1Category({ id, name, slug, sortOrder }),
+  );
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await insertRow(supabase, "categories", {
+      id,
+      name,
+      slug,
+      sort_order: sortOrder,
+    });
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/categories");
   revalidatePath("/menu");
   revalidatePath("/");
@@ -72,26 +113,28 @@ export async function createCategory(formData: FormData): Promise<ActionResult> 
 }
 
 export async function updateCategory(formData: FormData): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   const sortOrder = Number(formData.get("sort_order") ?? 0);
 
   if (!id || !name) return fail("Category id and name are required");
 
-  const { error } = await updateRow(
-    supabase,
-    "categories",
-    {
-      name,
-      slug: slugify(name),
-      sort_order: sortOrder,
-    },
-    "id",
-    id
+  const slug = slugify(name);
+  const d1Result = await runD1(() =>
+    updateD1Category({ id, name, slug, sortOrder }),
   );
-
-  if (error) return fail(error.message);
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await updateRow(
+      supabase,
+      "categories",
+      { name, slug, sort_order: sortOrder },
+      "id",
+      id,
+    );
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/categories");
   revalidatePath("/menu");
   revalidatePath("/");
@@ -99,9 +142,13 @@ export async function updateCategory(formData: FormData): Promise<ActionResult> 
 }
 
 export async function deleteCategory(id: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("categories").delete().eq("id", id);
-  if (error) return fail(error.message);
+  const d1Result = await runD1(() => deleteD1Category(id));
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await supabase.from("categories").delete().eq("id", id);
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/categories");
   revalidatePath("/menu");
   revalidatePath("/");
@@ -109,7 +156,6 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
 }
 
 export async function createMenuItem(formData: FormData): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const categoryId = String(formData.get("category_id") ?? "");
   const description = String(formData.get("description") ?? "").trim();
@@ -121,33 +167,54 @@ export async function createMenuItem(formData: FormData): Promise<ActionResult> 
 
   const slug = `${slugify(name)}-${Date.now()}`;
   const id = `item-${Date.now()}`;
-
-  const { data: lastRows } = await supabase
-    .from("menu_items")
-    .select("display_order")
-    .eq("category_id", categoryId)
-    .order("display_order", { ascending: false })
-    .limit(1);
-
-  const lastInCategory = lastRows?.[0] as { display_order: number } | undefined;
-  const displayOrder = (lastInCategory?.display_order ?? -1) + 1;
-
-  const { error } = await insertRow(supabase, "menu_items", {
-    id,
-    name,
-    slug,
-    category_id: categoryId,
-    description: description || null,
-    price,
-    image_url: imageUrl,
-    image_crop: readCrop(formData, "image_crop"),
-    display_order: displayOrder,
-    is_popular: formData.get("is_popular") === "on",
-    is_best_seller: formData.get("is_best_seller") === "on",
-    is_available: formData.get("is_available") !== "off",
-  });
-
-  if (error) return fail(error.message);
+  const imageCrop = parseCrop(readCrop(formData, "image_crop"));
+  const isPopular = formData.get("is_popular") === "on";
+  const isBestSeller = formData.get("is_best_seller") === "on";
+  const isAvailable = formData.get("is_available") !== "off";
+  const d1Result = await runD1(() =>
+    createD1MenuItem({
+      id,
+      name,
+      slug,
+      categoryId,
+      description: description || null,
+      price,
+      imageUrl,
+      imageCrop,
+      isPopular,
+      isBestSeller,
+      isAvailable,
+    }),
+  );
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { data: lastRows } = await supabase
+      .from("menu_items")
+      .select("display_order")
+      .eq("category_id", categoryId)
+      .order("display_order", { ascending: false })
+      .limit(1);
+    const lastInCategory = lastRows?.[0] as
+      | { display_order: number }
+      | undefined;
+    const displayOrder = (lastInCategory?.display_order ?? -1) + 1;
+    const { error } = await insertRow(supabase, "menu_items", {
+      id,
+      name,
+      slug,
+      category_id: categoryId,
+      description: description || null,
+      price,
+      image_url: imageUrl,
+      image_crop: imageCrop as Json | null,
+      display_order: displayOrder,
+      is_popular: isPopular,
+      is_best_seller: isBestSeller,
+      is_available: isAvailable,
+    });
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/menu");
   revalidatePath("/menu");
   revalidatePath("/");
@@ -155,7 +222,6 @@ export async function createMenuItem(formData: FormData): Promise<ActionResult> 
 }
 
 export async function updateMenuItem(formData: FormData): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   const categoryId = String(formData.get("category_id") ?? "");
@@ -164,6 +230,34 @@ export async function updateMenuItem(formData: FormData): Promise<ActionResult> 
   const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
 
   if (!id || !name || !categoryId) return fail("Missing required fields");
+
+  const imageCrop = parseCrop(readCrop(formData, "image_crop"));
+  const isPopular = formData.get("is_popular") === "on";
+  const isBestSeller = formData.get("is_best_seller") === "on";
+  const isAvailable = formData.get("is_available") === "on";
+  const d1Result = await runD1(() =>
+    updateD1MenuItem({
+      id,
+      name,
+      categoryId,
+      description: description || null,
+      price,
+      imageUrl,
+      imageCrop,
+      isPopular,
+      isBestSeller,
+      isAvailable,
+    }),
+  );
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (d1Result) {
+    revalidatePath("/admin/menu");
+    revalidatePath("/menu");
+    revalidatePath("/");
+    return { ok: true };
+  }
+
+  const { supabase } = await requireAdmin();
 
   const { data: existingRows } = await supabase
     .from("menu_items")
@@ -179,10 +273,10 @@ export async function updateMenuItem(formData: FormData): Promise<ActionResult> 
     description: description || null,
     price,
     image_url: imageUrl,
-    image_crop: readCrop(formData, "image_crop"),
-    is_popular: formData.get("is_popular") === "on",
-    is_best_seller: formData.get("is_best_seller") === "on",
-    is_available: formData.get("is_available") === "on",
+    image_crop: imageCrop as Json | null,
+    is_popular: isPopular,
+    is_best_seller: isBestSeller,
+    is_available: isAvailable,
   };
 
   if (existing && existing.category_id !== categoryId) {
@@ -213,9 +307,13 @@ export async function updateMenuItem(formData: FormData): Promise<ActionResult> 
 }
 
 export async function deleteMenuItem(id: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("menu_items").delete().eq("id", id);
-  if (error) return fail(error.message);
+  const d1Result = await runD1(() => deleteD1MenuItem(id));
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await supabase.from("menu_items").delete().eq("id", id);
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/menu");
   revalidatePath("/menu");
   revalidatePath("/");
@@ -226,8 +324,18 @@ export async function reorderMenuItems(
   categoryId: string,
   orderedIds: string[]
 ): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   if (!categoryId || !orderedIds.length) return { ok: true };
+
+  const d1Result = await runD1(() => reorderD1MenuItems(orderedIds));
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (d1Result) {
+    revalidatePath("/admin/menu");
+    revalidatePath("/menu");
+    revalidatePath("/");
+    return { ok: true };
+  }
+
+  const { supabase } = await requireAdmin();
 
   const updates = orderedIds.map((id, index) =>
     updateRow(
@@ -252,24 +360,39 @@ export async function reorderMenuItems(
 export async function createMenuBanner(
   formData: FormData
 ): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   const imageUrl = String(formData.get("image_url") ?? "").trim();
   if (!imageUrl) return fail("Banner image is required");
 
-  const { count } = await supabase
-    .from("menu_banners")
-    .select("id", { count: "exact", head: true });
+  const imageCrop = parseCrop(readCrop(formData, "image_crop"));
+  const caption = String(formData.get("caption") ?? "").trim() || null;
+  const clickLink = String(formData.get("click_link") ?? "").trim() || null;
+  const isEnabled = formData.get("is_enabled") === "on";
+  const d1Result = await runD1(() =>
+    createD1MenuBanner({
+      imageUrl,
+      imageCrop,
+      caption,
+      clickLink,
+      isEnabled,
+    }),
+  );
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { count } = await supabase
+      .from("menu_banners")
+      .select("id", { count: "exact", head: true });
 
-  const { error } = await insertRow(supabase, "menu_banners", {
-    image_url: imageUrl,
-    image_crop: readCrop(formData, "image_crop"),
-    caption: String(formData.get("caption") ?? "").trim() || null,
-    click_link: String(formData.get("click_link") ?? "").trim() || null,
-    sort_order: count ?? 0,
-    is_enabled: formData.get("is_enabled") === "on",
-  });
-
-  if (error) return fail(error.message);
+    const { error } = await insertRow(supabase, "menu_banners", {
+      image_url: imageUrl,
+      image_crop: imageCrop as Json | null,
+      caption,
+      click_link: clickLink,
+      sort_order: count ?? 0,
+      is_enabled: isEnabled,
+    });
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/banners");
   revalidatePath("/");
   return { ok: true };
@@ -278,35 +401,55 @@ export async function createMenuBanner(
 export async function updateMenuBanner(
   formData: FormData
 ): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const imageUrl = String(formData.get("image_url") ?? "").trim();
   if (!id || !imageUrl) return fail("Banner id and image are required");
 
-  const { error } = await updateRow(
-    supabase,
-    "menu_banners",
-    {
-      image_url: imageUrl,
-      image_crop: readCrop(formData, "image_crop"),
-      caption: String(formData.get("caption") ?? "").trim() || null,
-      click_link: String(formData.get("click_link") ?? "").trim() || null,
-      is_enabled: formData.get("is_enabled") === "on",
-    },
-    "id",
-    id
+  const imageCrop = parseCrop(readCrop(formData, "image_crop"));
+  const caption = String(formData.get("caption") ?? "").trim() || null;
+  const clickLink = String(formData.get("click_link") ?? "").trim() || null;
+  const isEnabled = formData.get("is_enabled") === "on";
+  const d1Result = await runD1(() =>
+    updateD1MenuBanner({
+      id,
+      imageUrl,
+      imageCrop,
+      caption,
+      clickLink,
+      isEnabled,
+    }),
   );
-
-  if (error) return fail(error.message);
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await updateRow(
+      supabase,
+      "menu_banners",
+      {
+        image_url: imageUrl,
+        image_crop: imageCrop as Json | null,
+        caption,
+        click_link: clickLink,
+        is_enabled: isEnabled,
+      },
+      "id",
+      id,
+    );
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/banners");
   revalidatePath("/");
   return { ok: true };
 }
 
 export async function deleteMenuBanner(id: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("menu_banners").delete().eq("id", id);
-  if (error) return fail(error.message);
+  const d1Result = await runD1(() => deleteD1MenuBanner(id));
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await supabase.from("menu_banners").delete().eq("id", id);
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/banners");
   revalidatePath("/");
   return { ok: true };
@@ -315,8 +458,17 @@ export async function deleteMenuBanner(id: string): Promise<ActionResult> {
 export async function reorderMenuBanners(
   orderedIds: string[]
 ): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   if (!orderedIds.length) return { ok: true };
+
+  const d1Result = await runD1(() => reorderD1MenuBanners(orderedIds));
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (d1Result) {
+    revalidatePath("/admin/banners");
+    revalidatePath("/");
+    return { ok: true };
+  }
+
+  const { supabase } = await requireAdmin();
 
   const updates = orderedIds.map((id, index) =>
     updateRow(supabase, "menu_banners", { sort_order: index }, "id", id)
@@ -335,15 +487,19 @@ export async function toggleMenuBanner(
   id: string,
   enabled: boolean
 ): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
-  const { error } = await updateRow(
-    supabase,
-    "menu_banners",
-    { is_enabled: enabled },
-    "id",
-    id
-  );
-  if (error) return fail(error.message);
+  const d1Result = await runD1(() => toggleD1MenuBanner(id, enabled));
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await updateRow(
+      supabase,
+      "menu_banners",
+      { is_enabled: enabled },
+      "id",
+      id,
+    );
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/banners");
   revalidatePath("/");
   return { ok: true };
@@ -360,24 +516,38 @@ function parseOpeningHours(formData: FormData): OpeningHour[] {
 }
 
 export async function createBranch(formData: FormData): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return fail("Branch name is required");
-
-  const { error } = await insertRow(supabase, "branches", {
+  const branch = {
     name,
     slug: slugify(name),
     address: String(formData.get("address") ?? "").trim() || null,
     phone: String(formData.get("phone") ?? "").trim() || null,
-    whatsapp_phone:
+    whatsappPhone:
       String(formData.get("whatsapp_phone") ?? "").replace(/\D/g, "") || null,
-    google_maps_url: String(formData.get("google_maps_url") ?? "").trim() || null,
-    opening_hours: parseOpeningHours(formData),
-    sort_order: Number(formData.get("sort_order") ?? 0),
-    is_active: formData.get("is_active") !== "off",
-  });
-
-  if (error) return fail(error.message);
+    googleMapsUrl:
+      String(formData.get("google_maps_url") ?? "").trim() || null,
+    openingHours: parseOpeningHours(formData),
+    sortOrder: Number(formData.get("sort_order") ?? 0),
+    isActive: formData.get("is_active") !== "off",
+  };
+  const d1Result = await runD1(() => createD1Branch(branch));
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await insertRow(supabase, "branches", {
+      name: branch.name,
+      slug: branch.slug,
+      address: branch.address,
+      phone: branch.phone,
+      whatsapp_phone: branch.whatsappPhone,
+      google_maps_url: branch.googleMapsUrl,
+      opening_hours: branch.openingHours,
+      sort_order: branch.sortOrder,
+      is_active: branch.isActive,
+    });
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/branches");
   revalidatePath("/", "layout");
   revalidatePath("/contact");
@@ -385,32 +555,46 @@ export async function createBranch(formData: FormData): Promise<ActionResult> {
 }
 
 export async function updateBranch(formData: FormData): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   if (!id || !name) return fail("Branch id and name are required");
-
-  const { error } = await updateRow(
-    supabase,
-    "branches",
-    {
-      name,
-      slug: slugify(name),
-      address: String(formData.get("address") ?? "").trim() || null,
-      phone: String(formData.get("phone") ?? "").trim() || null,
-      whatsapp_phone:
-        String(formData.get("whatsapp_phone") ?? "").replace(/\D/g, "") || null,
-      google_maps_url:
-        String(formData.get("google_maps_url") ?? "").trim() || null,
-      opening_hours: parseOpeningHours(formData),
-      sort_order: Number(formData.get("sort_order") ?? 0),
-      is_active: formData.get("is_active") === "on",
-    },
-    "id",
-    id
-  );
-
-  if (error) return fail(error.message);
+  const branch = {
+    id,
+    name,
+    slug: slugify(name),
+    address: String(formData.get("address") ?? "").trim() || null,
+    phone: String(formData.get("phone") ?? "").trim() || null,
+    whatsappPhone:
+      String(formData.get("whatsapp_phone") ?? "").replace(/\D/g, "") || null,
+    googleMapsUrl:
+      String(formData.get("google_maps_url") ?? "").trim() || null,
+    openingHours: parseOpeningHours(formData),
+    sortOrder: Number(formData.get("sort_order") ?? 0),
+    isActive: formData.get("is_active") === "on",
+  };
+  const d1Result = await runD1(() => updateD1Branch(branch));
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await updateRow(
+      supabase,
+      "branches",
+      {
+        name: branch.name,
+        slug: branch.slug,
+        address: branch.address,
+        phone: branch.phone,
+        whatsapp_phone: branch.whatsappPhone,
+        google_maps_url: branch.googleMapsUrl,
+        opening_hours: branch.openingHours,
+        sort_order: branch.sortOrder,
+        is_active: branch.isActive,
+      },
+      "id",
+      id,
+    );
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/branches");
   revalidatePath("/", "layout");
   revalidatePath("/contact");
@@ -418,9 +602,13 @@ export async function updateBranch(formData: FormData): Promise<ActionResult> {
 }
 
 export async function deleteBranch(id: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("branches").delete().eq("id", id);
-  if (error) return fail(error.message);
+  const d1Result = await runD1(() => deleteD1Branch(id));
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+    const { error } = await supabase.from("branches").delete().eq("id", id);
+    if (error) return fail(error.message);
+  }
   revalidatePath("/admin/branches");
   revalidatePath("/", "layout");
   revalidatePath("/contact");
@@ -430,8 +618,6 @@ export async function deleteBranch(id: string): Promise<ActionResult> {
 export async function updateSiteSettings(
   formData: FormData
 ): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
-
   const settingsId = String(formData.get("id") ?? "");
   const restaurantName = String(formData.get("restaurant_name") ?? "").trim();
   if (!restaurantName) return fail("Restaurant name is required");
@@ -450,13 +636,31 @@ export async function updateSiteSettings(
     hero_title: String(formData.get("hero_title") ?? "").trim() || null,
   };
 
-  const { error } = settingsId
-    ? await updateRow(supabase, "site_settings", payload, "id", settingsId)
-    : await insertRow(supabase, "site_settings", {
-        ...payload,
-        whatsapp_phone: "96181999162",
-      });
-  if (error) return fail(error.message);
+  const d1Result = await runD1(() =>
+    updateD1SiteSettings({
+      id: settingsId || undefined,
+      restaurantName: payload.restaurant_name,
+      email: payload.email,
+      deliveryFee: payload.delivery_fee,
+      instagramUrl: payload.instagram_url,
+      facebookUrl: payload.facebook_url,
+      tiktokUrl: payload.tiktok_url,
+      logoUrl: payload.logo_url,
+      heroTitle: payload.hero_title,
+    }),
+  );
+  if (d1Result && !d1Result.ok) return d1Result;
+  if (!d1Result) {
+    const { supabase } = await requireAdmin();
+
+    const { error } = settingsId
+      ? await updateRow(supabase, "site_settings", payload, "id", settingsId)
+      : await insertRow(supabase, "site_settings", {
+          ...payload,
+          whatsapp_phone: "96181999162",
+        });
+    if (error) return fail(error.message);
+  }
 
   revalidatePath("/admin/settings");
   revalidatePath("/", "layout");

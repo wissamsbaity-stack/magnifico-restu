@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { cn } from "@/lib/utils";
 
 export function AdminShell({
   email,

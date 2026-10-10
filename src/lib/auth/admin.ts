@@ -2,6 +2,8 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import type { ProfileRow } from "@/lib/supabase/types";
+import { getAdminAuthBackend } from "@/lib/auth/backend";
+import { requireCloudflareAdmin } from "@/lib/auth/cloudflare-access";
 
 /** Deduped per request — layout + page data helpers share one auth round-trip. */
 export const requireAdmin = cache(async () => {
@@ -38,6 +40,14 @@ export const requireAdmin = cache(async () => {
   }
 
   return { supabase, user, profile: typedProfile };
+});
+
+export const requireAdminIdentity = cache(async () => {
+  if (getAdminAuthBackend() === "cloudflare-access") {
+    return requireCloudflareAdmin();
+  }
+  const { user, profile } = await requireAdmin();
+  return { user, profile };
 });
 
 export async function getSessionUser() {

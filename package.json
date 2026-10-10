@@ -17,6 +17,7 @@
     "db:push": "supabase db push",
     "backup:supabase": "node scripts/migration/backup-supabase.mjs",
     "prepare:d1-import": "node scripts/migration/prepare-d1-import.mjs",
+    "prepare:d1-fallback-seed": "node scripts/migration/prepare-fallback-d1-seed.mjs",
     "prepare:r2-media": "node scripts/migration/prepare-r2-media.mjs",
     "upload:r2-media": "node scripts/migration/upload-r2-media.mjs",
     "test:migration": "node scripts/migration/smoke-test.mjs"
@@ -26,6 +27,7 @@
     "@supabase/supabase-js": "^2.49.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.4.7",
+    "jose": "^6.2.12",
     "lucide-react": "^0.475.0",
     "next": "^15.2.0",
     "react": "^19.0.0",

@@ -4,6 +4,7 @@ import { sortMenuItems } from "@/lib/menu-order";
 import type { Category, MenuItem } from "@/types/menu";
 import type { MenuService } from "@/lib/menu-service.types";
 import { StaticMenuService } from "@/lib/static-menu-service";
+import { isSupabaseConfigured } from "@/lib/content-backend";
 
 export class SupabaseMenuService implements MenuService {
   private async client() {
@@ -79,13 +80,6 @@ export class SupabaseMenuService implements MenuService {
     if (error) throw error;
     return data ? mapMenuItem(data) : null;
   }
-}
-
-export function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
 }
 
 export const menuService: MenuService = isSupabaseConfigured()

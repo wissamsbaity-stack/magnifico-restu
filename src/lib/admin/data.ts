@@ -1,3 +1,10 @@
+import {
+  getD1AdminStats,
+  getD1Categories,
+  getD1MenuBanners,
+  getD1MenuItems,
+} from "@/lib/cloudflare/content-queries";
+import { getContentBackend } from "@/lib/content-backend";
 import { createServerClient } from "@/lib/supabase/server";
 import { isMissingRelationError } from "@/lib/supabase/errors";
 import type { CategoryRow, Database, MenuItemRow } from "@/lib/supabase/types";
@@ -26,6 +33,22 @@ async function getAdminClient() {
 }
 
 export async function getAdminMenuBanners(): Promise<AdminMenuBannersResult> {
+  if (getContentBackend() === "d1") {
+    try {
+      return {
+        banners: await getD1MenuBanners(),
+        schemaReady: true,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        banners: [],
+        schemaReady: true,
+        error: error instanceof Error ? error.message : "D1 query failed",
+      };
+    }
+  }
+
   const supabase = await getAdminClient();
   const { data, error } = await supabase
     .from("menu_banners")
@@ -59,6 +82,7 @@ export async function getAdminMenuBanners(): Promise<AdminMenuBannersResult> {
 }
 
 export async function getAdminCategories(): Promise<CategoryRow[]> {
+  if (getContentBackend() === "d1") return getD1Categories();
   const supabase = await getAdminClient();
   const { data, error } = await supabase
     .from("categories")
@@ -69,6 +93,7 @@ export async function getAdminCategories(): Promise<CategoryRow[]> {
 }
 
 export async function getAdminMenuItems(): Promise<MenuItemRow[]> {
+  if (getContentBackend() === "d1") return getD1MenuItems();
   const supabase = await getAdminClient();
   const { data, error } = await supabase
     .from("menu_items")
@@ -82,6 +107,7 @@ export async function getAdminMenuItems(): Promise<MenuItemRow[]> {
 }
 
 export async function getAdminStats() {
+  if (getContentBackend() === "d1") return getD1AdminStats();
   const supabase = await getAdminClient();
   const [categories, items, bannerCount, branchCount] = await Promise.all([
     supabase.from("categories").select("id", { count: "exact", head: true }),

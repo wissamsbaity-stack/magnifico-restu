@@ -1,7 +1,13 @@
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
   "name": "magnifico-migration-local",
+  "main": "../.open-next/worker.js",
   "compatibility_date": "2026-09-17",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "../.open-next/assets",
+    "binding": "ASSETS"
+  },
   "d1_databases": [
     {
       "binding": "DB",
@@ -9,5 +15,16 @@
       "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "d1"
     }
-  ]
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "magnifico-media-preview"
+    }
+  ],
+  "vars": {
+    "CONTENT_BACKEND": "d1",
+    "NEXT_PUBLIC_CONTENT_BACKEND": "d1",
+    "MEDIA_PUBLIC_BASE_URL": "http://localhost:8787/media"
+  }
 }

@@ -116,6 +116,25 @@ async function encodeCanvasPng(
   );
 }
 
+async function encodeCanvasWebp(
+  canvas: HTMLCanvasElement,
+  maxBytes: number,
+  initialQuality = 0.82,
+): Promise<Blob> {
+  let quality = initialQuality;
+  let blob = await canvasToBlob(canvas, "image/webp", quality);
+  while (blob.size > maxBytes && quality > 0.45) {
+    quality -= 0.08;
+    blob = await canvasToBlob(canvas, "image/webp", quality);
+  }
+  if (blob.size > maxBytes) {
+    throw new Error(
+      `Optimized image is too large (${formatMegabytes(blob.size)}).`,
+    );
+  }
+  return blob;
+}
+
 function drawToCanvas(img: HTMLImageElement, maxDim: number) {
   let width = img.naturalWidth;
   let height = img.naturalHeight;
@@ -178,10 +197,79 @@ export async function compressLogoImage(file: File): Promise<Blob> {
   return encodeCanvasPng(canvas, MAX_MENU_IMAGE_BYTES);
 }
 
+async function createR2Variants(
+  file: File,
+  preserveTransparency: boolean,
+): Promise<{ display: Blob; thumbnail: Blob }> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Please choose a JPEG, PNG, WebP, or GIF image.");
+  }
+  if (file.size > MAX_MENU_IMAGE_BYTES * 4) {
+    throw new Error(
+      `This image is too large (${formatMegabytes(file.size)}). Maximum original size is 20 MB.`,
+    );
+  }
+
+  const image = await loadImage(file);
+  const render = async (maxDimension: number, quality: number) => {
+    const { canvas, ctx } = drawToCanvas(image, maxDimension);
+    if (!preserveTransparency) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return encodeCanvasWebp(canvas, MAX_MENU_IMAGE_BYTES, quality);
+  };
+
+  const [display, thumbnail] = await Promise.all([
+    render(1600, 0.82),
+    render(480, 0.78),
+  ]);
+  return { display, thumbnail };
+}
+
+async function uploadR2ImageClient(
+  file: File,
+  preserveTransparency: boolean,
+): Promise<MenuImageUploadResult> {
+  try {
+    const { display, thumbnail } = await createR2Variants(
+      file,
+      preserveTransparency,
+    );
+    const formData = new FormData();
+    formData.set("original", file, file.name);
+    formData.set("display", display, "display.webp");
+    formData.set("thumbnail", thumbnail, "thumbnail.webp");
+    const response = await fetch("/api/admin/media", {
+      method: "POST",
+      body: formData,
+    });
+    const result = (await response.json()) as {
+      url?: string;
+      error?: string;
+    };
+    if (!response.ok || !result.url) {
+      return { ok: false, error: result.error ?? "Image upload failed." };
+    }
+    return { ok: true, url: result.url };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Image upload failed.",
+    };
+  }
+}
+
 export async function uploadMenuImageClient(
   file: File,
   options: ImageUploadOptions = {}
 ): Promise<MenuImageUploadResult> {
+  const preserveTransparency = options.preserveTransparency ?? false;
+  if (process.env.NEXT_PUBLIC_CONTENT_BACKEND === "d1") {
+    return uploadR2ImageClient(file, preserveTransparency);
+  }
+
   const supabase = createBrowserClient();
   if (!supabase) {
     return { ok: false, error: "Supabase is not configured." };
@@ -198,8 +286,6 @@ export async function uploadMenuImageClient(
       error: "You must be signed in as an admin to upload images.",
     };
   }
-
-  const preserveTransparency = options.preserveTransparency ?? false;
 
   let blob: Blob;
   try {

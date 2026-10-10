@@ -1,23 +1,11 @@
 import type { Category, MenuItem, MenuItemWithCategory } from "@/types/menu";
 import { D1MenuService } from "@/lib/cloudflare/menu-service";
+import { getContentBackend } from "@/lib/content-backend";
 import { StaticMenuService } from "@/lib/static-menu-service";
-import {
-  isSupabaseConfigured,
-  SupabaseMenuService,
-} from "@/lib/supabase/menu-service";
+import { SupabaseMenuService } from "@/lib/supabase/menu-service";
 
 export type { MenuService } from "@/lib/menu-service.types";
-export { isSupabaseConfigured } from "@/lib/supabase/menu-service";
-
-type ContentBackend = "d1" | "supabase" | "static";
-
-export function getContentBackend(): ContentBackend {
-  const configured = process.env.CONTENT_BACKEND?.trim().toLowerCase();
-  if (configured === "d1" || configured === "supabase" || configured === "static") {
-    return configured;
-  }
-  return isSupabaseConfigured() ? "supabase" : "static";
-}
+export { getContentBackend, isSupabaseConfigured } from "@/lib/content-backend";
 
 function createMenuService() {
   switch (getContentBackend()) {

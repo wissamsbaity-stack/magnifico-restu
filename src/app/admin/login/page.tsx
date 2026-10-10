@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { getAdminAuthBackend } from "@/lib/auth/backend";
 import { getSiteSettings } from "@/lib/settings/site-settings";
 import AdminLoginPage from "./AdminLoginPage";
 
@@ -11,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
+  if (getAdminAuthBackend() === "cloudflare-access") redirect("/admin");
   const settings = await getSiteSettings();
 
   return (

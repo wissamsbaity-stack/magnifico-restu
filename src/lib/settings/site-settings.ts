@@ -1,4 +1,6 @@
 import { cache } from "react";
+import { getD1SiteSettingsRow } from "@/lib/cloudflare/content-queries";
+import { getContentBackend } from "@/lib/content-backend";
 import { createServerClient } from "@/lib/supabase/server";
 import type { SiteSettingsRow, OpeningHour } from "@/lib/supabase/types";
 import { restaurantInfo } from "@/data/restaurant";
@@ -111,6 +113,17 @@ function mapRow(row: SiteSettingsRow): PublicSiteSettings {
 }
 
 const fetchSiteSettingsRow = cache(async (): Promise<SiteSettingsRow | null> => {
+  const backend = getContentBackend();
+  if (backend === "static") return null;
+  if (backend === "d1") {
+    try {
+      return await getD1SiteSettingsRow();
+    } catch (error) {
+      console.error("[getSiteSettings] D1 query failed", error);
+      return null;
+    }
+  }
+
   const supabase = await createServerClient();
   if (!supabase) return null;
 

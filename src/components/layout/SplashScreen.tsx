@@ -216,7 +216,6 @@ export function SplashScreen() {
       <picture>
         <source srcSet={SPLASH_ARTWORK_AVIF} type="image/avif" />
         <source srcSet={SPLASH_ARTWORK_WEBP} type="image/webp" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={SPLASH_ARTWORK_FALLBACK}
           alt=""

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/admin";
+import { requireAdminIdentity } from "@/lib/auth/admin";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getSiteSettings } from "@/lib/settings/site-settings";
 
@@ -8,7 +8,7 @@ export default async function AdminDashboardLayout({
   children: React.ReactNode;
 }) {
   const [{ profile }, settings] = await Promise.all([
-    requireAdmin(),
+    requireAdminIdentity(),
     getSiteSettings(),
   ]);
 
