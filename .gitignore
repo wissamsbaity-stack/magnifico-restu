@@ -38,6 +38,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Cloudflare Workers / OpenNext generated files
+.open-next
+.wrangler
+**/.wrangler/
+
 # typescript
 *.tsbuildinfo
 .ngrok.log
