@@ -11,6 +11,9 @@
 # testing
 /coverage
 
+# local migration backups (contain production data)
+/backups/
+
 # next.js
 /.next/
 /out/

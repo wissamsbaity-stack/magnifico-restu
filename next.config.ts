@@ -3,8 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      // TEMPORARY: Bypass the Supabase-dependent homepage until its quota is restored.
-      { source: "/", destination: "/menu", permanent: false },
       { source: "/locations", destination: "/", permanent: true },
     ];
   },

@@ -3,7 +3,12 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "https://magnificostreetfood.com/menu",
+      "destination": "https://magnificostreetfood.com/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://magnificostreetfood.com/:path*",
       "permanent": true
     }
   ]
